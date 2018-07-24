@@ -1,25 +1,30 @@
 {% extends "base.html" %}
 {% block content %}
 <canvas id="shopchart" width="600" height="600"></canvas>
+{% comment %} <button onclick="mqclient.connect(option);">Connect</button> {% endcomment %}
+<div id="messages"></div>
 {% endblock %}
 {% block script %}
+    {% comment %} var topic = {{}} {% endcomment %}
+    var mqtopic = "{{shopmq}}";
 {% autoescape off%}
     var ctx = document.getElementById("shopchart").getContext('2d');
+    var data = {{chartdata}};
     var shopChart = new Chart(ctx, {
         type: 'bar',
         data: {
-            labels: ["Red", "Blue"],
+            labels: data.labels,
             datasets: [{
-                label: "# of Votes",
-                data: [12, 19],
-                backgroundColor: [
+                label: "# of Visits",
+                data: data.data,
+                {% comment %} backgroundColor: [
                     'rgba(255,99,132, 0.2)',
                     'rgba(54,162,235,0.2)'
                 ],
                 borderColor: [
                     'rgba(255,99,132,1)',
                     'rgba(54,162,235,1)'
-                ],
+                ], {% endcomment %}
                 borderWidth: 1
             }]
         },
@@ -33,5 +38,51 @@
             }
         }
     });
+    // Create a client instance
+    mqclient = new Paho.MQTT.Client(location.hostname, 15675, "/ws", mqtopic);
+    
+    // set callback handlers
+    mqclient.onConnectionLost = onConnectionLost;
+    mqclient.onMessageArrived = onMessageArrived;
+    
+    // option of the client
+    option = {
+        onSuccess:onConnect,
+        timeout: 3,
+        keepAliveInterval: 30,
+        userName: "guest",
+        password: "guest"
+    };
+    
+    // connect the client
+    mqclient.connect(option);
+
+    // called when the client loses its connection
+    function onConnectionLost(responseObject) {
+      if (responseObject.errorCode !== 0) {
+        console.log("onConnectionLost:"+responseObject.errorMessage);
+      }
+    };
+
+    // called when the client connects
+    function onConnect() {
+      // Once a connection has been made, make a subscription and send a message.
+      console.log("onConnect");
+      mqclient.subscribe(mqtopic);
+      message = new Paho.MQTT.Message("Hello");
+      message.destinationName = mqtopic;
+      mqclient.send(message);
+    };
+    
+    // called when a message arrives
+    function onMessageArrived(message) {
+      console.log("onMessageArrived:"+message.payloadString);
+      $('#messages').append('<span>Topic: ' + message.payloadString + '</span>');
+      //data update
+
+      //chart update
+      shopChart.update();
+    };
+
 {% endautoescape %}
 {% endblock %}
