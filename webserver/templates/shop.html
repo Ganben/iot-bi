@@ -69,7 +69,11 @@
       // Once a connection has been made, make a subscription and send a message.
       console.log("onConnect");
       mqclient.subscribe(mqtopic);
-      message = new Paho.MQTT.Message("Hello");
+      obj_datas = {
+          label: '1',
+          data: 1
+      };
+      message = new Paho.MQTT.Message(JSON.stringify(obj_datas));
       message.destinationName = mqtopic;
       mqclient.send(message);
     };
@@ -77,9 +81,21 @@
     // called when a message arrives
     function onMessageArrived(message) {
       console.log("onMessageArrived:"+message.payloadString);
-      $('#messages').append('<span>Topic: ' + message.payloadString + '</span>');
+      jmessage = JSON.parse(message.payloadString);
+      $('#messages').append('<span>:: ' + message.payloadString + '</span>');
       //data update
-
+      c = 0;
+      for (var prop in data.labels) {
+          console.log('loop')
+          if (data.labels[c] === jmessage.label) {
+              {% comment %} console.log(prop) {% endcomment %}
+              data.data[c] = jmessage.data;
+              break;
+          } else {
+              console.log(c)
+          };
+          c = c + 1;
+      };
       //chart update
       shopChart.update();
     };
