@@ -25,13 +25,13 @@ db = mysql.connector.connect(
 
 class Queries:
     # query the devicedatalive
-    query_device = ("SELECT id, visited, device_id, shop_id FROM stats_devicedatalive WHERE device_id = %s LIMIT 1") 
+    query_device = ("SELECT id, visited, device_id, shop_id FROM stats_devicedatalive WHERE device_id = %s LIMIT 1;") 
     # query the shopdatalive
-    query_shop = ("SELECT id, visited, shop_id FROM stats_shopdatalive WHERE shop_id = %s LIMIT 1")
+    query_shop = ("SELECT id, visited, shop_id FROM stats_shopdatalive WHERE shop_id = %s LIMIT 1;")
     # update the devicedatalive
-    update_device = ("UPDATE stats_devicedatalive SET visited = %s WHERE device_id = %s")
+    update_device = ("UPDATE stats_devicedatalive SET visited = %s WHERE device_id = %s ;")
     # update the shopdatalive
-    update_shop = ("UPDATE stats_shopdatalive SET visited = %s WHERE shop_id = %s")
+    update_shop = ("UPDATE stats_shopdatalive SET visited = %s WHERE shop_id = %s ;")
 
 class DeltaVisited:
     # structure for accumulated things, limited for update frequency(or cache)
@@ -66,9 +66,9 @@ class DeltaVisited:
         # update dev and shop
         s = self.map_store.get(k)
         dv = self.dev_store.get(k)
-        sv = self.shop_store.get(k)
+        sv = self.shop_store.get(s)
         update_dev(k, dv)
-        update_shop(k, sv)
+        update_shop(s, sv)
         print("--update db--")
         update_commit()
 
@@ -83,6 +83,7 @@ def update_dev(did, amount):
     cr.execute(Queries.update_device % (did, amount))
     # cr.close()
     db.commit()
+    cr.close()
 
 def update_shop(shid, amount):
     # update
@@ -90,6 +91,7 @@ def update_shop(shid, amount):
     cr.execute(Queries.update_shop % (shid, amount))
     # cr.close()
     db.commit()
+    cr.close()
 
 def query_shop(shid, count = 1):
     cr = db.cursor(buffered=True)
@@ -98,6 +100,7 @@ def query_shop(shid, count = 1):
         visited += count
         break
     cr.close()
+    print("s: %s visited" % visited)
     return id, visited
 
 def query_device(dvid, count=1):
@@ -113,15 +116,16 @@ def query_device(dvid, count=1):
         visited += count
         break
     cursorA.close()
+    print("d: %s visited" % visited)
     return id, visited, device_id, shop_id
 
 def generate_chart_data(device_id):
     # body is a json fied
     shop_id = deltaChange.map_store.get(device_id)
-    amount = deltaChange.shop_store.get(shop_id)
+    amount = deltaChange.dev_store.get(device_id)
     # FD required shop visits update:
     return json.dumps({
-        'label': '%s' % shop_id,
+        'label': '%s' % device_id,
         'data': amount        
     })
 
@@ -131,7 +135,6 @@ def on_connect(client, userdata, flag_dict, rc):
     #
     print("connected with result code: %s" % str(rc))
     client.subscribe("dev")
-
 def on_message(client, userdata, msg):
     #
     print("----receiv----")
