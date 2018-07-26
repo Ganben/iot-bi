@@ -34,5 +34,5 @@ if __name__ == "__main__":
     if len(sys.argv) < 3:
         raise Exception('require device and counts')
     pl = struct.pack("QI", int(sys.argv[1]), int(sys.argv[2]))
-    publish.single("dev", pl, hostname="127.0.0.1", retain=True, qos=0)
+    publish.single("dev", pl, hostname="127.0.0.1", retain=False, qos=2)
     print("--sent--")
