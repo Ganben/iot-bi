@@ -38,8 +38,8 @@
             }
         }
     });
-    // Create a client instance
-    mqclient = new Paho.MQTT.Client(location.hostname, 15675, "/ws", mqtopic);
+    // Create a client instance, path /ws or /
+    mqclient = new Paho.MQTT.Client(location.hostname, 9883, "/", mqtopic);
     
     // set callback handlers
     mqclient.onConnectionLost = onConnectionLost;

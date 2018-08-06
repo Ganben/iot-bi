@@ -24,7 +24,7 @@ def on_message(client, userdata, msg):
 c = client.Client(transport="websockets")
 c.on_connect = on_connect
 c.on_message = on_message
-c.ws_set_options(path="/ws")
+# c.ws_set_options(path="/ws")
 # c.connect("127.0.0.1", 15675, 60)
 
 # c.loop_forever()
@@ -34,5 +34,5 @@ if __name__ == "__main__":
     if len(sys.argv) < 3:
         raise Exception('require device and counts')
     pl = struct.pack("QI", int(sys.argv[1]), int(sys.argv[2]))
-    publish.single("dev", pl, hostname="127.0.0.1", retain=False, qos=2)
+    publish.single("dev", pl, hostname="127.0.0.1", port=9883, transport="websockets", retain=False, qos=2)
     print("--sent--")

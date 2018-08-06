@@ -153,8 +153,8 @@ c = client.Client(transport="websockets", client_id="receiver")
 c.on_connect = on_connect
 c.on_message = on_message
 c.username_pw_set("guest", "guest")
-c.ws_set_options(path="/ws")
-c.connect("127.0.0.1", 15675, 60)
+c.ws_set_options(path="/")
+c.connect("127.0.0.1", 9883, 60)
 
 
 if __name__ == "__main__":
