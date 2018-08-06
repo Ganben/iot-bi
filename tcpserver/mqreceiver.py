@@ -136,25 +136,30 @@ def on_connect(client, userdata, flag_dict, rc):
     #
     print("connected with result code: %s" % str(rc))
     client.subscribe("dev")
+    client.subscribe("remote")
 def on_message(client, userdata, msg):
     #
     print("----receiv----")
     print("%s:%s" % (msg.topic, msg.payload))
-    device_id, add = struct.unpack("QI", msg.payload)
-    # start show case
-    shopid = deltaChange.put_dev(device_id, add)
-    deltaChange.put_shop(shopid, add)
-    deltaChange.update(device_id)
-    body = generate_chart_data(device_id)
-    client.publish("shop%s" % shopid, body, qos=2)
-    print('sent updated shop %s' % shopid)
+    if msg.topic == "dev":
+        device_id, add = struct.unpack("QI", msg.payload)
+        # start show case
+        shopid = deltaChange.put_dev(device_id, add)
+        deltaChange.put_shop(shopid, add)
+        deltaChange.update(device_id)
+        body = generate_chart_data(device_id)
+        client.publish("shop%s" % shopid, body, qos=2)
+        print('sent updated shop %s' % shopid)
+    else:
+        print('receive %s : %s' %(msg.topic, msg.payload))
 
-c = client.Client(transport="websockets", client_id="receiver")
+# c = client.Client(transport="websockets", client_id="receiver")
+c = client.Client(client_id="receiver")
 c.on_connect = on_connect
 c.on_message = on_message
 c.username_pw_set("guest", "guest")
 c.ws_set_options(path="/")
-c.connect("127.0.0.1", 9883, 60)
+c.connect("127.0.0.1", 1883, 60)
 
 
 if __name__ == "__main__":
