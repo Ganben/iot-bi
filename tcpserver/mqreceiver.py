@@ -142,14 +142,24 @@ def on_message(client, userdata, msg):
     print("----receiv----")
     print("%s:%s" % (msg.topic, msg.payload))
     if msg.topic == "dev":
-        device_id, add = struct.unpack("QI", msg.payload)
+        try:
+            # device_id = struct.unpack("32s", msg.payload)
+            # device_id_hex = 
+            device_id = int(msg.payload, 16)
+            add = 1
+            # device_id, add = struct.unpack("QI", msg.payload)
+            # device_id = int(msg.payload[0])
+            print("did:%d" % device_id)
+            # add = int(msg.payload[2])
+            shopid = deltaChange.put_dev(device_id, add)
+            deltaChange.put_shop(shopid, add)
+            deltaChange.update(device_id)
+            body = generate_chart_data(device_id)
+            client.publish("shop%s" % shopid, body, qos=2)
+            print('sent updated shop %s' % shopid)
+        except:
+            print('unpack error')
         # start show case
-        shopid = deltaChange.put_dev(device_id, add)
-        deltaChange.put_shop(shopid, add)
-        deltaChange.update(device_id)
-        body = generate_chart_data(device_id)
-        client.publish("shop%s" % shopid, body, qos=2)
-        print('sent updated shop %s' % shopid)
     else:
         print('receive %s : %s' %(msg.topic, msg.payload))
 
