@@ -18,8 +18,12 @@ WiFiClient wclient;
 PubSubClient mclient(wclient);
 long lastMsg = 0;
 char msg[50];
+char bmsg[32];
 int value = 0;
-
+//test data bytemsg;
+//const char bytemsg[12] = {0x01,0x01,0x01,0x01,0x01,0x00,0x01,0x01,0x02,0x01,0x01,0x01};
+const char* hexmsg = "0000000001";
+//"8fad12f5d9";
 // for buttun/high-low voltage signal
 const int buttonPin = 15;
 const int ledPin = 13;
@@ -45,36 +49,40 @@ void setup() {
   Serial.begin(9600);
   Serial.println("OLED test!");
   display.begin();
-  display.print("Init success");
+  display.print(MQSERVER, 4);
+  display.print("Init success", 1);
   delay(1000);
-  display.print("Wifi init...");
+  display.print("Wifi init...", 1);
   WiFi.begin(WIFISSID, PASS);
 
   while (WiFi.status() != WL_CONNECTED) {
     delay(10000);
     Serial.print("wifi init...\n");
-    display.print("Wifi con..");
+    display.print("Wifi con..", 1);
 //    WiFi.begin(WIFISSID, PASS);
   }
 //  myip = WiFi.localIP();
   Serial.println(WiFi.localIP());
-  display.print("WiFi conn success");
+  display.print("WiFi connected.", 1);
+//  display.print((char)WiFi.localIP(), 3);
   delay(500);
   // con mqtt
-  display.print("Mqtt init..");
+//  display.clear
+  display.print("TCP init...", 2);
   mclient.setServer(MQSERVER,MQPORT);
+  
   mclient.setCallback(callback);
 }
 
 void callback(char* topic, byte* payload, unsigned int length) {
-  Serial.print("Message arrived!");
+  Serial.print("Message arrived![");
   Serial.print(topic);
-  Serial.print("] ");
+  Serial.print("]:");
 
   for (int i = 0; i < length; i++) {
     Serial.print((char)payload[i]);
   }
-  display.print("Incoming MQTT");
+  display.print("TCP recv...", 3);
   Serial.println();
 
 }
@@ -83,9 +91,10 @@ void reconnect() {
   // Loop until we're reconnected
   while (!mclient.connected()) {
     Serial.print("Attempting MQTT connection...\n");
+    display.print("TCP reconn........", 2);
     // Attempt to connect
     if (mclient.connect("ESP8266Client")) {
-      Serial.println("connected");
+      Serial.println("connected\n");
       // Once connected, publish an announcement...
       mclient.publish("remote", "hello world");
       // ... and resubscribe
@@ -108,6 +117,7 @@ void loop() {
     delay(1500);
   }
   mclient.loop();
+  display.print("TCP connected.", 2);
   
   buttonState = digitalRead(buttonPin);
   // modification detection;
@@ -126,12 +136,12 @@ void loop() {
     //turn LED on;
 //    Serial.print("button high");
     digitalWrite(ledPin, HIGH);
-    display.print("button high");
+//    display.print("button high");
     delay(5);
   } else {
     //turn LED off;
     digitalWrite(ledPin, LOW);
-    display.print("button low");
+//    display.print("button low");
     delay(5);
   }
   
@@ -142,6 +152,13 @@ void loop() {
     snprintf (msg, 75, "heartbeat #+%ld s", value * 30);
     Serial.print("heartbeat:");
     Serial.println(msg);
+    if (value % 3 == 0) {
+//      bytemsg = ;
+//      int imsg[4] = {1,0,2,0};
+//    lets make it hex string to avoid 0x00;　　　　
+      mclient.publish("dev", hexmsg, 32);
+      delay(20);
+    }
     mclient.publish("remote", msg);
   }
 }
