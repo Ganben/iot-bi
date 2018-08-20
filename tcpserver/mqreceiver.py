@@ -5,14 +5,33 @@
 # mysql 
 # mem data structure
 
-
+# redis
+# for cacke/simple (no share with web) data not in mysql
 
 import sys
 import struct
 import json
+import logging
 
+import redis
 from paho.mqtt import client
 import mysql.connector 
+
+### set up logging
+logger = logging.getLogger('mqreceiver')
+logger.setLevel(logging.DEBUG)
+
+# fh
+fh = logging.FileHandler('mqreceiver.log')
+fh.setLevel(logging.DEBUG)
+# ch
+ch = logging.StreamHandler()
+ch.setLevel(logging.DEBUG)
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s -%(message)s')
+fh.setFormatter(formatter)
+ch.setFormatter(formatter)
+logger.addHandler(fh)
+logger.addHandler(ch)
 
 ### MYSQL/DATAMODEL part
 db = mysql.connector.connect(
@@ -23,6 +42,9 @@ db = mysql.connector.connect(
     charset = 'latin1'
 )
 
+# rd = redis.StrictRedis(host='127.0.0.1', port=6379, db=0)
+rpool = redis.ConnectionPool(host='localhost', port=6379, db=0)
+rd = redis.Redis(connection_pool=rpool)
 
 class Queries:
     # query the devicedatalive
@@ -39,19 +61,27 @@ class DeltaVisited:
     map_store = {}
     dev_store = {}
     shop_store = {}
+    # rdb = rd
     # TODO: no limiter yet
+    def __init__(self, rdb):
+        self.rdb = rdb
+
     def put_dev(self, k, v):
         # k: device id
         # v: added count
         # get dev save query from cache
         if not self.dev_store.get(k, False):
             # query
+            logger.info('found existing dev id %s' % k)
             id, visited, device_id, shop_id = query_device(k, v)
             self.map_store[k] = shop_id
             self.dev_store[k] = visited
+            self.rdb.set(k, visited)
         else:
+            logger.info('put new dev id %s' % k)
             shop_id = self.map_store.get(k)
             self.dev_store[k] += v
+            self.rdb.set(k, self.dev_store[k])
         return shop_id
 
     def put_shop(self, k, v):
@@ -70,27 +100,30 @@ class DeltaVisited:
         sv = self.shop_store.get(s)
         update_dev(k, dv)
         update_shop(s, sv)
-        print("--update db--")
+        logger.info("--update db--")
         update_commit()
 
-deltaChange = DeltaVisited()
+deltaChange = DeltaVisited(rd)
 
 def update_commit():
     db.commit()
 
 def update_dev(did, amount):
     # update
+    rd.set(did, amount)
     cr = db.cursor(buffered=True)
-    cr.execute(Queries.update_device % (did, amount))
+    r = cr.execute(Queries.update_device % (did, amount))
     # cr.close()
+    logger.debug('db dev update: %s' % r)
     db.commit()
     cr.close()
 
 def update_shop(shid, amount):
     # update
     cr = db.cursor(buffered=True)
-    cr.execute(Queries.update_shop % (shid, amount))
+    r = cr.execute(Queries.update_shop % (shid, amount))
     # cr.close()
+    logger.debug('db shop update %s' % r)
     db.commit()
     cr.close()
 
@@ -101,7 +134,7 @@ def query_shop(shid, count = 1):
         visited += count
         break
     cr.close()
-    print("s: %s visited" % visited)
+    logger.info("s: %s visited" % visited)
     return id, visited
 
 def query_device(dvid, count=1):
@@ -117,7 +150,7 @@ def query_device(dvid, count=1):
         visited += count
         break
     cursorA.close()
-    print("d: %s visited" % visited)
+    logger.info("d: %s visited" % visited)
     return id, visited, device_id, shop_id
 
 def generate_chart_data(device_id):
@@ -134,34 +167,34 @@ def generate_chart_data(device_id):
 # def connect to local web mqtt
 def on_connect(client, userdata, flag_dict, rc):
     #
-    print("connected with result code: %s" % str(rc))
+    logger.info("connected with result code: %s" % str(rc))
     client.subscribe("dev")
     client.subscribe("remote")
 def on_message(client, userdata, msg):
     #
-    print("----receiv----")
-    print("%s:%s" % (msg.topic, msg.payload))
+    logger.debug("----receiv----")
+    logger.debug("%s:%s" % (msg.topic, msg.payload))
     if msg.topic == "dev":
         try:
             # device_id = struct.unpack("32s", msg.payload)
-            # device_id_hex = 
+            # device_id_hex = ## modified from last change, hex string to int
             device_id = int(msg.payload, 16)
             add = 1
             # device_id, add = struct.unpack("QI", msg.payload)
             # device_id = int(msg.payload[0])
-            print("did:%d" % device_id)
+            logger.info("did:%d" % device_id)
             # add = int(msg.payload[2])
             shopid = deltaChange.put_dev(device_id, add)
             deltaChange.put_shop(shopid, add)
             deltaChange.update(device_id)
             body = generate_chart_data(device_id)
             client.publish("shop%s" % shopid, body, qos=2)
-            print('sent updated shop %s' % shopid)
+            logger.info('sent updated shop %s' % shopid)
         except:
-            print('unpack error')
+            logger.error('unpack error')
         # start show case
     else:
-        print('receive %s : %s' %(msg.topic, msg.payload))
+        logger.info('receive %s : %s' %(msg.topic, msg.payload))
 
 # c = client.Client(transport="websockets", client_id="receiver")
 c = client.Client(client_id="receiver")

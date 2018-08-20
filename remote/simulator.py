@@ -35,6 +35,7 @@ if __name__ == "__main__":
         raise Exception('require device and counts')
     # pl = struct.pack("", int(sys.argv[1]), int(sys.argv[2]))
     # pl = "%2d%2d%2d%2d" % (int(sys.argv[1]), 0, int(sys.argv[2]), 0)
-    pl = f"{sys.argv[1]:x}"
+    # real wlan addr: 192.168.31.122
+    pl = f"{int(sys.argv[1]):x}"
     publish.single("dev", pl, hostname="127.0.0.1", port=9883, transport="websockets", retain=False, qos=2)
     print("--sent--")
