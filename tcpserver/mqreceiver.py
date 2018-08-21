@@ -70,7 +70,8 @@ class DeltaVisited:
         # k: device id
         # v: added count
         # get dev save query from cache
-        if not self.dev_store.get(k, False):
+        shop_id = 0
+        if self.dev_store.get(k, False):
             # query
             logger.info('found existing dev id %s' % k)
             id, visited, device_id, shop_id = query_device(k, v)
@@ -82,6 +83,7 @@ class DeltaVisited:
             shop_id = self.map_store.get(k)
             self.dev_store[k] += v
             self.rdb.set(k, self.dev_store[k])
+
         return shop_id
 
     def put_shop(self, k, v):
@@ -175,14 +177,21 @@ def on_message(client, userdata, msg):
     logger.debug("----receiv----")
     logger.debug("%s:%s" % (msg.topic, msg.payload))
     if msg.topic == "dev":
+        add = 1
         try:
             # device_id = struct.unpack("32s", msg.payload)
             # device_id_hex = ## modified from last change, hex string to int
             device_id = int(msg.payload, 16)
-            add = 1
+            # add = 1
             # device_id, add = struct.unpack("QI", msg.payload)
             # device_id = int(msg.payload[0])
             logger.info("did:%d" % device_id)
+        except:
+            device_id = 1
+            logger.error('unpack error')
+        
+        try:
+
             # add = int(msg.payload[2])
             shopid = deltaChange.put_dev(device_id, add)
             deltaChange.put_shop(shopid, add)
@@ -191,7 +200,7 @@ def on_message(client, userdata, msg):
             client.publish("shop%s" % shopid, body, qos=2)
             logger.info('sent updated shop %s' % shopid)
         except:
-            logger.error('unpack error')
+            logger.error('update error')
         # start show case
     else:
         logger.info('receive %s : %s' %(msg.topic, msg.payload))
