@@ -80,8 +80,8 @@ class DeltaVisited:
             self.rdb.set(k, visited)
         else:
             logger.info('put new dev id %s' % k)
-            shop_id = self.map_store.get(k)
-            self.dev_store[k] += v
+            shop_id = self.map_store.get(k, 1)
+            self.dev_store[k] = v + self.dev_store.get(k, 0)
             self.rdb.set(k, self.dev_store[k])
 
         return shop_id
@@ -108,9 +108,11 @@ class DeltaVisited:
 deltaChange = DeltaVisited(rd)
 
 def update_commit():
+    logger.debug('db commit')
     db.commit()
 
 def update_dev(did, amount):
+    logger.debug('upt device %s' % did)
     # update
     rd.set(did, amount)
     cr = db.cursor(buffered=True)
@@ -121,6 +123,10 @@ def update_dev(did, amount):
     cr.close()
 
 def update_shop(shid, amount):
+    logger.debug('upt shop %s' % shid)
+    if not shid:
+        return False
+
     # update
     cr = db.cursor(buffered=True)
     r = cr.execute(Queries.update_shop % (shid, amount))
@@ -130,27 +136,48 @@ def update_shop(shid, amount):
     cr.close()
 
 def query_shop(shid, count = 1):
+    logger.debug('query shop %s' % shid)
     cr = db.cursor(buffered=True)
-    cr.execute(Queries.query_shop % (shid))
+    try:
+        cr.execute(Queries.query_shop % (shid))
+    except Exception as e:
+        logger.debug('%s' % e)
+        return 0, 0
+    id = 0
+    visited = 0
+    shop_id = 0
     for (id, visited, shop_id) in cr:
         visited += count
         break
     cr.close()
-    logger.info("s: %s visited" % visited)
+    logger.info("qr shop: %s visited" % visited)
     return id, visited
 
 def query_device(dvid, count=1):
+    logger.debug('qr devi %s' % dvid)
     #device id, added counts
     cursorA = db.cursor(buffered=True)
     # cursorB = db.cursor(buffered=True)
 
+
     # query for shop id
-    cursorA.execute(Queries.query_device % (dvid))
+    try:
+        cursorA.execute(Queries.query_device % (dvid))
+    except Exception as e:
+        logger.debug('%s' % e)
+        return 0, 0, 0, 0
+    
+    id = 0
+    visited = 0
+    device_id = 0
+    shop_id = 0
+
     # get 
     for (id, visited, device_id, shop_id) in cursorA:
         pass
         visited += count
         break
+
     cursorA.close()
     logger.info("d: %s visited" % visited)
     return id, visited, device_id, shop_id
@@ -190,13 +217,16 @@ def on_message(client, userdata, msg):
             device_id = 1
             logger.error('unpack error')
         
-        try:
-
+        
+        if not device_id == 0:
             # add = int(msg.payload[2])
             shopid = deltaChange.put_dev(device_id, add)
+            logger.info('put shop %s' % shopid)
             deltaChange.put_shop(shopid, add)
             deltaChange.update(device_id)
             body = generate_chart_data(device_id)
+
+        try:
             client.publish("shop%s" % shopid, body, qos=2)
             logger.info('sent updated shop %s' % shopid)
         except:
