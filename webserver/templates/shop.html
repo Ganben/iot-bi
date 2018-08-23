@@ -1,6 +1,10 @@
 {% extends "base.html" %}
 {% block content %}
-<canvas id="shopchart" width="600" height="600"></canvas>
+<div class="chart-container" style="position: relative; height:40vh; width:80vw">
+    <h4>Device Live Stats</h4>
+    of ShopName, current datetime
+    <canvas id="shopchart" width="800" height="400"></canvas>
+</div>
 {% comment %} <button onclick="mqclient.connect(option);">Connect</button> {% endcomment %}
 <div id="messages"></div>
 {% endblock %}
@@ -67,22 +71,22 @@
     // called when the client connects
     function onConnect() {
       // Once a connection has been made, make a subscription and send a message.
-      console.log("onConnect");
-      mqclient.subscribe(mqtopic);
-      obj_datas = {
-          label: '1',
-          data: 1
-      };
-      message = new Paho.MQTT.Message(JSON.stringify(obj_datas));
-      message.destinationName = mqtopic;
-      mqclient.send(message);
+      //console.log("onConnect");
+      //mqclient.subscribe(mqtopic);
+      //obj_datas = {
+          //label: '1',
+          //data: 1
+      //};
+      //message = new Paho.MQTT.Message(JSON.stringify(obj_datas));
+      //message.destinationName = mqtopic;
+      //mqclient.send(message);
     };
     
     // called when a message arrives
     function onMessageArrived(message) {
       console.log("onMessageArrived:"+message.payloadString);
       jmessage = JSON.parse(message.payloadString);
-      $('#messages').append('<span>:: ' + message.payloadString + '</span>');
+      //$('#messages').append('<span>:: ' + message.payloadString + '</span>');
       //data update
       c = 0;
       for (var prop in data.labels) {

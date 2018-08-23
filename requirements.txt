@@ -1,2 +1,6 @@
 mysql-connector-python
 paho-mqtt
+django
+djangorestframework
+markdown
+django-filter

@@ -39,13 +39,13 @@ db = mysql.connector.connect(
     password = '123456',
     host = '127.0.0.1',
     database = 'iotbt',
-    charset = 'latin1'
+    charset = 'utf8mb4'
 )
 
 # rd = redis.StrictRedis(host='127.0.0.1', port=6379, db=0)
 rpool = redis.ConnectionPool(host='localhost', port=6379, db=0)
 rd = redis.Redis(connection_pool=rpool)
-
+# rd.set_response_callback('HGET', int)
 class Queries:
     # query the devicedatalive
     query_device = ("SELECT id, visited, device_id, shop_id FROM stats_devicedatalive WHERE device_id = %s LIMIT 1;") 
@@ -117,10 +117,10 @@ def update_dev(did, amount):
     rd.set(did, amount)
     cr = db.cursor(buffered=True)
     r = cr.execute(Queries.update_device % (did, amount))
-    # cr.close()
-    logger.debug('db dev update: %s' % r)
-    db.commit()
     cr.close()
+    logger.debug('db dev update res: %s' % r)
+    db.commit()
+    # cr.close()
 
 def update_shop(shid, amount):
     logger.debug('upt shop %s' % shid)
@@ -130,10 +130,10 @@ def update_shop(shid, amount):
     # update
     cr = db.cursor(buffered=True)
     r = cr.execute(Queries.update_shop % (shid, amount))
-    # cr.close()
+    cr.close()
     logger.debug('db shop update %s' % r)
     db.commit()
-    cr.close()
+    # cr.close()
 
 def query_shop(shid, count = 1):
     logger.debug('query shop %s' % shid)
@@ -150,6 +150,8 @@ def query_shop(shid, count = 1):
         visited += count
         break
     cr.close()
+    if shop_id == 0 and id == 0:
+        visited = 1
     logger.info("qr shop: %s visited" % visited)
     return id, visited
 
@@ -171,15 +173,22 @@ def query_device(dvid, count=1):
     visited = 0
     device_id = 0
     shop_id = 0
-
+    
     # get 
     for (id, visited, device_id, shop_id) in cursorA:
         pass
         visited += count
         break
-
+    
     cursorA.close()
-    logger.info("d: %s visited" % visited)
+    logger.debug('determin sql or redis')
+
+    if id == 0 and device_id == 0:
+        visited = int(rd.get(dvid))
+        visited += count
+        rd.set(dvid, visited)
+    
+    logger.info("dev: %s visited" % visited)
     return id, visited, device_id, shop_id
 
 def generate_chart_data(device_id):
