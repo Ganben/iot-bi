@@ -4,3 +4,4 @@ django
 djangorestframework
 markdown
 django-filter
+mysqlclient

@@ -1,10 +1,13 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="chart-container" style="position: relative; height:40vh; width:80vw">
-    <h4>Device Live Stats</h4>
-    of ShopName, current datetime
-    <canvas id="shopchart" width="800" height="400"></canvas>
-</div>
+<p class="lead">
+        <div class="chart-container" style="position: relative; height:40vh; width:80vw">
+                <h4 class="mt-5">Device Live Stats</h4>
+                of ShopName, current datetime
+                <canvas id="shopchart" width="800" height="400"></canvas>
+            </div>
+            
+</p>
 {% comment %} <button onclick="mqclient.connect(option);">Connect</button> {% endcomment %}
 <div id="messages"></div>
 {% endblock %}
@@ -71,15 +74,15 @@
     // called when the client connects
     function onConnect() {
       // Once a connection has been made, make a subscription and send a message.
-      //console.log("onConnect");
-      //mqclient.subscribe(mqtopic);
-      //obj_datas = {
-          //label: '1',
-          //data: 1
-      //};
-      //message = new Paho.MQTT.Message(JSON.stringify(obj_datas));
-      //message.destinationName = mqtopic;
-      //mqclient.send(message);
+      console.log("onConnect");
+      mqclient.subscribe(mqtopic);
+      obj_datas = {
+          label: 'web',
+          data: 'hello'
+      };
+      message = new Paho.MQTT.Message(JSON.stringify(obj_datas));
+      message.destinationName = "remote";
+      mqclient.send(message);
     };
     
     // called when a message arrives

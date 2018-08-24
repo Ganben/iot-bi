@@ -75,12 +75,25 @@ class DeltaVisited:
             # query
             logger.info('found existing dev id %s' % k)
             id, visited, device_id, shop_id = query_device(k, v)
-            self.map_store[k] = shop_id
+            if not id:
+                # not save knonw id
+                logger.debug('unknow dev id')
+                return 0
+            # self.map_store[k] = shop_id
+            visited = self.dev_store[k] + 1
             self.dev_store[k] = visited
             self.rdb.set(k, visited)
+
         else:
             logger.info('put new dev id %s' % k)
-            shop_id = self.map_store.get(k, 1)
+            # fetch new stuff from sql db
+            id, visited, device_id, shop_id = query_device(k, v)
+            if not id:
+                logger.debug('unknow new dev id')
+                return 0
+            # not saving unknow id
+            self.map_store[k] = shop_id
+            self.dev_store[k] = visited + v
             self.dev_store[k] = v + self.dev_store.get(k, 0)
             self.rdb.set(k, self.dev_store[k])
 
@@ -89,6 +102,10 @@ class DeltaVisited:
     def put_shop(self, k, v):
         #k: shop id
         #v: change
+        if not k:
+            logger.error('shop id None')
+            return False
+
         if not self.shop_store.get(k, False):
             id, visited = query_shop(k)
             self.shop_store[k] = visited
@@ -116,10 +133,15 @@ def update_dev(did, amount):
     # update
     rd.set(did, amount)
     cr = db.cursor(buffered=True)
-    r = cr.execute(Queries.update_device % (did, amount))
-    cr.close()
-    logger.debug('db dev update res: %s' % r)
-    db.commit()
+    try:
+        r = cr.execute(Queries.update_device % (did, amount))
+
+        logger.debug('db dev update res: %s' % r)
+    except Exception as e:
+        logger.error('db sql error:%s' % e)
+    finally:
+        cr.close()
+        db.commit()
     # cr.close()
 
 def update_shop(shid, amount):
@@ -178,15 +200,21 @@ def query_device(dvid, count=1):
     for (id, visited, device_id, shop_id) in cursorA:
         pass
         visited += count
+        logger.info('fetch result: %s' % visited)
         break
     
     cursorA.close()
+    # make sure the unknow will not save TODO
     logger.debug('determin sql or redis')
 
-    if id == 0 and device_id == 0:
-        visited = int(rd.get(dvid))
-        visited += count
-        rd.set(dvid, visited)
+    if id == 0 and rd.get(dvid):
+        try:
+            visited = int(rd.get(dvid)) 
+            visited += count
+            rd.set(dvid, visited)
+        except Exception as e:
+            logger.error('redis not found')
+        
     
     logger.info("dev: %s visited" % visited)
     return id, visited, device_id, shop_id
