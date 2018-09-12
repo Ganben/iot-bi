@@ -20,20 +20,29 @@ long lastMsg = 0;
 char msg[50];
 char bmsg[32];
 int value = 0;
+int cc = 0;
 //test data bytemsg;
 //const char bytemsg[12] = {0x01,0x01,0x01,0x01,0x01,0x00,0x01,0x01,0x02,0x01,0x01,0x01};
 const char* hexmsg = "0000000001";
 //"8fad12f5d9";
 // for buttun/high-low voltage signal
-const int buttonPin = 15;
-const int ledPin = 13;
+const int s1Pin = 15;
+const int s2Pin = 13;
+const int s3Pin = 12;
+const int s4Pin = 14;
 int buttonState = 0;
 int prevState = 0;
-
+int b1 = 0;
+int b2 = 0;
+int b3 = 0;
+int accumulate = 0;
 void setup() {
   //define IO
-  pinMode(buttonPin, INPUT);
-  pinMode(ledPin, OUTPUT);
+  pinMode(s1Pin, INPUT);
+  pinMode(s2Pin, INPUT);
+  pinMode(s3Pin, INPUT);
+  pinMode(s4Pin, INPUT);
+  
   // put your setup code here, to run once:
   Serial.begin(9600);
   while (!Serial) {
@@ -49,7 +58,7 @@ void setup() {
   Serial.begin(9600);
   Serial.println("OLED test!");
   display.begin();
-  display.print(MQSERVER, 4);
+  display.print("test1", 4);
   display.print("Init success", 1);
   delay(1000);
   display.print("Wifi init...", 1);
@@ -98,7 +107,8 @@ void reconnect() {
       // Once connected, publish an announcement...
       mclient.publish("remote", "hello world");
       // ... and resubscribe
-      mclient.subscribe("remote");
+      //mclient.subscribe("remote");
+      display.print("TCP connected", 2);
     } else {
       Serial.print("failed, rc=");
       Serial.print(mclient.state());
@@ -117,48 +127,74 @@ void loop() {
     delay(1500);
   }
   mclient.loop();
-  display.print("TCP connected.", 2);
+  //display.print("TCP connected.", 2);
   
-  buttonState = digitalRead(buttonPin);
+  buttonState = digitalRead(s1Pin);
   // modification detection;
   if (prevState == buttonState) {
     ;
   } else {
-    display.print("ALTER");
+    display.print("-X-");
     prevState = buttonState;
-    snprintf (msg, 75, "state change %s", buttonState); 
-    display.print(msg);
-    mclient.publish("remote", msg);
-    delay(500);
-  }
+    //snprintf (msg, 75, "state change %s", buttonState); 
+    //display.print("");
+    //mclient.publish("remote", "trigger");
+    //Serial.print("-X-");
+    //delay(1);
+  
   // listen on button state
-  if (buttonState = HIGH) {
+  if (buttonState == HIGH) {
     //turn LED on;
 //    Serial.print("button high");
-    digitalWrite(ledPin, HIGH);
-//    display.print("button high");
+//    digitalWrite(ledPin, HIGH);
+    display.print("b=H..");
     delay(5);
   } else {
     //turn LED off;
-    digitalWrite(ledPin, LOW);
-//    display.print("button low");
-    delay(5);
+//    digitalWrite(ledPin, LOW);
+    display.print("b=L..");
+    delay(30);
+    cc = 0;
+    b1 = digitalRead(s1Pin);
+    if (b1 == LOW){
+      ++cc;
+    }
+    delay(50);
+    b2 = digitalRead(s1Pin);
+    if (b2 == LOW){
+      ++cc;
+    }
+    delay(50);
+    b3 = digitalRead(s1Pin);
+    if (b3 == LOW){
+      ++cc;
+    }
+    if ( cc >= 2 ) {
+      ++accumulate;
+      Serial.print(accumulate);
+      Serial.print("th signals ---------------------\n");
+      mclient.publish("remote", "-X-");
+      display.print("-X SENT-");
+      delay(200);
+    }
+    
+  }
   }
   
   long now = millis();
-  if (now - lastMsg > 30000) {
+  if (now - lastMsg > 180000) {
     lastMsg = now;
     ++value;
-    snprintf (msg, 75, "heartbeat #+%ld s", value * 30);
+    snprintf (msg, 75, "hb #+%ld min", value*3);
     Serial.print("heartbeat:");
     Serial.println(msg);
-    if (value % 3 == 0) {
+//    if (value % 3 == 0) {
 //      bytemsg = ;
 //      int imsg[4] = {1,0,2,0};
 //    lets make it hex string to avoid 0x00;　　　　
-      mclient.publish("dev", hexmsg, 32);
-      delay(20);
-    }
+//      //mclient.publish("dev", hexmsg, 32);
+//      delay(0);
+//    }
     mclient.publish("remote", msg);
   }
 }
