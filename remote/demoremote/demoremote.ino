@@ -23,18 +23,20 @@ int value = 0;
 int cc = 0;
 //test data bytemsg;
 //const char bytemsg[12] = {0x01,0x01,0x01,0x01,0x01,0x00,0x01,0x01,0x02,0x01,0x01,0x01};
-const char* hexmsg = "0000000001";
+const char* hexmsg = "0000000001"; //device id
 //"8fad12f5d9";
 // for buttun/high-low voltage signal
 const int s1Pin = 15;
 const int s2Pin = 13;
 const int s3Pin = 12;
-const int s4Pin = 14;
+const int s4Pin = 5;
+
 int buttonState = 0;
 int prevState = 0;
-int b1 = 0;
-int b2 = 0;
-int b3 = 0;
+int signalvalue[4] = {1, 1, 1, 1};
+int b1[4] = {1, 1, 1, 1}; 
+int b2[4] = {1, 1, 1, 1};
+int b3[4] = {1, 1, 1, 1};
 int accumulate = 0;
 void setup() {
   //define IO
@@ -42,6 +44,7 @@ void setup() {
   pinMode(s2Pin, INPUT);
   pinMode(s3Pin, INPUT);
   pinMode(s4Pin, INPUT);
+  int signalvalue[4];
   
   // put your setup code here, to run once:
   Serial.begin(9600);
@@ -96,6 +99,52 @@ void callback(char* topic, byte* payload, unsigned int length) {
 
 }
 
+int filter(int which) {
+
+  int i;
+  for (i=0; i<4; i++){
+      b3[i] = b2[i];
+      b2[i] = b1[i];
+      b1[i] = signalvalue[i];
+  }
+  
+  if (b1[which] + b2[which] + b3[which] < 2) {
+    return which+1;
+  } else {
+    return -99;
+  }
+  
+}
+
+int signalcompare(){
+  
+  int i;
+  for (i =0; i<4; i++) {
+    //b3[i] = HIGH;
+    b2[i] = HIGH;
+    b1[i] = HIGH;
+  }
+  
+  for (i = 0; i<4; i++){
+    if (signalvalue[i] != b3[i] && signalvalue[i] == LOW) {
+      return i;
+      break;
+    }
+  }
+  for (i = 0; i<4; i++){
+    b3[i] = signalvalue[i];
+    //update b3 for state compare
+  }
+  return -9;
+}
+
+void readSignal(){
+    signalvalue[0] = digitalRead(s1Pin);
+    signalvalue[1] = digitalRead(s2Pin);
+    signalvalue[2] = digitalRead(s3Pin);
+    signalvalue[3] = digitalRead(s4Pin);
+}
+
 void reconnect() {
   // Loop until we're reconnected
   while (!mclient.connected()) {
@@ -105,7 +154,7 @@ void reconnect() {
     if (mclient.connect("ESP8266Client")) {
       Serial.println("connected\n");
       // Once connected, publish an announcement...
-      mclient.publish("remote", "hello world");
+      mclient.publish("remote", hexmsg);
       // ... and resubscribe
       //mclient.subscribe("remote");
       display.print("TCP connected", 2);
@@ -129,63 +178,74 @@ void loop() {
   mclient.loop();
   //display.print("TCP connected.", 2);
   
-  buttonState = digitalRead(s1Pin);
+  //buttonState = digitalRead(s1Pin);
+  readSignal();
+  buttonState = signalcompare();
+  snprintf(msg, 75, "%d%d%d%d", signalvalue[0], signalvalue[1], signalvalue[2], signalvalue[3]);
+//  Serial.printf(msg);
+  display.print(msg);
   // modification detection;
-  if (prevState == buttonState) {
+    //snprintf(msg, 75, "%d%d%d%d\n", signalvalue[0], signalvalue[1], signalvalue[2], signalvalue[3]);
+    //Serial.printf(msg);
+    //display.print(msg);
+  if (buttonState < 0) {
     ;
   } else {
-    display.print("-X-");
+    display.print("***");
+    Serial.print(buttonState);
     prevState = buttonState;
     //snprintf (msg, 75, "state change %s", buttonState); 
     //display.print("");
     //mclient.publish("remote", "trigger");
     //Serial.print("-X-");
     //delay(1);
-  
+    snprintf(msg, 75, "%d%d%d%d\n", signalvalue[0], signalvalue[1], signalvalue[2], signalvalue[3]);
+    Serial.printf(msg);
+    display.print(msg);
   // listen on button state
-  if (buttonState == HIGH) {
+  if (buttonState < 0) {
     //turn LED on;
 //    Serial.print("button high");
 //    digitalWrite(ledPin, HIGH);
-    display.print("b=H..");
+    display.print("b=H..--");
     delay(5);
+    Serial.print("bs<0");
   } else {
     //turn LED off;
 //    digitalWrite(ledPin, LOW);
-    display.print("b=L..");
-    delay(30);
-    cc = 0;
-    b1 = digitalRead(s1Pin);
-    if (b1 == LOW){
-      ++cc;
-    }
-    delay(50);
-    b2 = digitalRead(s1Pin);
-    if (b2 == LOW){
-      ++cc;
-    }
-    delay(50);
-    b3 = digitalRead(s1Pin);
-    if (b3 == LOW){
-      ++cc;
-    }
-    if ( cc >= 2 ) {
+    display.print("b=L..--");
+    delay(20);
+    cc = filter(buttonState);
+    Serial.print(cc);
+    readSignal();
+    cc = filter(buttonState);
+    Serial.print(cc);
+    delay(80);
+    
+    readSignal();
+    cc = filter(buttonState);
+    Serial.print(cc);
+    long now = millis();
+    if ( cc > 0 ) {
       ++accumulate;
-      Serial.print(accumulate);
-      Serial.print("th signals ---------------------\n");
-      mclient.publish("remote", "-X-");
-      display.print("-X SENT-");
-      delay(200);
+      Serial.print(cc);
+      Serial.print("th signals --------------\n");
+      snprintf(msg, 75, "%s.%d", hexmsg, cc);
+      //lastMsg = now; //think about reduce this losing risk;
+      mclient.publish("dev", msg);
+      snprintf(msg, 75, "si=%d", cc);
+      display.print(msg);
+      delay(300);
     }
     
   }
   }
-  
   long now = millis();
-  if (now - lastMsg > 180000) {
+
+  if (now - lastMsg > 30000) {
     lastMsg = now;
     ++value;
-    snprintf (msg, 75, "hb #+%ld min", value*3);
+    snprintf (msg, 75, "hb.%s.%ld", hexmsg, value);
     Serial.print("heartbeat:");
     Serial.println(msg);
 //    if (value % 3 == 0) {
@@ -196,5 +256,9 @@ void loop() {
 //      delay(0);
 //    }
     mclient.publish("remote", msg);
+    snprintf(msg, 75, "%d%d%d%d\n", signalvalue[0], signalvalue[1], signalvalue[2], signalvalue[3]);
+    Serial.printf(msg);
+    display.print(msg);
+    
   }
 }
