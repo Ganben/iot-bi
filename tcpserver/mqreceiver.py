@@ -241,25 +241,36 @@ def on_message(client, userdata, msg):
     logger.debug("----receiv----")
     logger.debug("%s:%s" % (msg.topic, msg.payload))
     if msg.topic == "dev":
-        add = 1
+        
         try:
             # device_id = struct.unpack("32s", msg.payload)
             # device_id_hex = ## modified from last change, hex string to int
-            device_id = int(msg.payload, 16)
+            dev_str = str(msg.payload).split('.')
+            
+            # device_id = int(msg.payload, 16)
             # add = 1
             # device_id, add = struct.unpack("QI", msg.payload)
             # device_id = int(msg.payload[0])
-            logger.info("did:%d" % device_id)
+            logger.info("dev_s:%s" % dev_str)
         except:
-            device_id = 1
+            # device_id = 1
             logger.error('unpack error')
+            return
+        
+        try:
+            device_id = int(dev_str[0], 16) #parse hex to int
+            device_pin = int(dev_str[1])
+        except:
+            logger.error('wrong device id format')
+            return
+
         
         
         if not device_id == 0:
             # add = int(msg.payload[2])
-            shopid = deltaChange.put_dev(device_id, add)
+            shopid = deltaChange.put_dev(device_id, 1)
             logger.info('put shop %s' % shopid)
-            deltaChange.put_shop(shopid, add)
+            deltaChange.put_shop(shopid, 1)
             deltaChange.update(device_id)
             body = generate_chart_data(device_id)
 
@@ -269,6 +280,18 @@ def on_message(client, userdata, msg):
         except:
             logger.error('update error')
         # start show case
+    elif msg.topic == 'remote':
+        logger.info('receive %s : %s' %(msg.topic, msg.payload))
+        remote_register = str(msg.payload).split('.')
+        if len(remote_register) > 1 and remote_register[0] == 'hb':
+            #TODO: push the device's online duration
+            device_id = int(remote_register[1], 16)
+            time = int(remote_register[2])
+        elif len(remote_register) == 1:
+            new_device_id = int(remote_register[0], 16)
+        else:
+            return
+
     else:
         logger.info('receive %s : %s' %(msg.topic, msg.payload))
 
