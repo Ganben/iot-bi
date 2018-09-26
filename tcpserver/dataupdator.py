@@ -7,12 +7,14 @@
 
 # redis
 # for cacke/simple (no share with web) data not in mysql
+# for complex data: use pickle as object storage/retrieve, with direct redis set/get
 
 import sys
 import struct
 import json
 import logging
 import datetime
+import pickle
 
 import redis
 # from paho.mqtt import client
@@ -76,24 +78,29 @@ class DaemonThreader:
     
 # data structure part
 
-# 1. active device
+# 1. active device data
 class ActiveDevice:
-    def __init__(self, device_id):
-        self.id = device_id
-        self.on = datetime.datetime.now()
+    def __init__(self):
         self.active_length = 0
-        self.last_msg = self.on
-    def refresh(self, active_length):
-        self.active_length = active_length
-        self.last_msg = datetime.datetime.now()
+        self.device = {}
 
-    # TODO: serilizaer
-    # TODO data model framework
+# data manipulator class
+class ActiveManager(object):
 
-# 2. pin signal
-class LivePin:
-    def __init__(self, device_id, pin_id):
-        self.id = device_id
-        self.pin = pin_id
-    # TODO: 
+
+# 2. device-pin total data
+class IndexLive:
+    def __init__(self):
+        self.devices = {}
+
+# data manipulator class
+class IndexManager(object):
+
+
+# 3. device-shop info map
+class DevShopMap:
+    def __init__(self):
+
+
+class DevShopMapManager(object):
     
