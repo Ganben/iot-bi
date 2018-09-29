@@ -82,25 +82,38 @@ class DaemonThreader:
 class ActiveDevice:
     def __init__(self):
         self.active_length = 0
-        self.device = {}
+        self.device = {}  # k:device v: [total, pin1, pin2, pin3, pin4]
 
 # data manipulator class
 class ActiveManager(object):
+    def __init__(self):
+        self.active_device = ActiveDevice()
+        # load from redis if exist
 
+    def feed(self, registration):
+        pass # parse hex to registrated device, numbers
 
 # 2. device-pin total data
 class IndexLive:
     def __init__(self):
-        self.devices = {}
+        self.devices = {}    # k = device v = incremented numbers
+        # load from redis if exist
 
 # data manipulator class
 class IndexManager(object):
-
+    def __init__(self):
+        self.indexlive = IndexLive()
+        # load from redis
+    def feed(self, activedevices):
+        pass
 
 # 3. device-shop info map
 class DevShopMap:
     def __init__(self):
-
+        self.devices = {}  # k:dev, v:shop
 
 class DevShopMapManager(object):
-    
+    def __init__(self):
+        self.map = DevShopMap()
+        # load from redis
+        # and save to redis
