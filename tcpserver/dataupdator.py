@@ -8,6 +8,14 @@
 # redis
 # for cacke/simple (no share with web) data not in mysql
 # for complex data: use pickle as object storage/retrieve, with direct redis set/get
+# example:
+'''
+obj = ExampleObject()
+pickled_object = pickle.dumps(obj)
+r.set('some_key', pickled_object)
+unpacked_object = pickle.loads(r.get('some_key'))
+obj == unpacked_object
+'''
 
 import sys
 import struct
@@ -83,6 +91,7 @@ class ActiveDevice:
     def __init__(self):
         self.active_length = 0
         self.device = {}  # k:device v: [total, pin1, pin2, pin3, pin4]
+        #
 
 # data manipulator class
 class ActiveManager(object):
@@ -117,3 +126,6 @@ class DevShopMapManager(object):
         self.map = DevShopMap()
         # load from redis
         # and save to redis
+    def feed(self, data):
+        pass
+        #to parse device to shop 
