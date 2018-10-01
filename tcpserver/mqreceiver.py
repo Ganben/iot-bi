@@ -282,7 +282,7 @@ def on_message(client, userdata, msg):
         # start show case
     elif msg.topic == 'remote':
         logger.info('receive %s : %s' %(msg.topic, msg.payload))
-        remote_register = str(msg.payload).split('.')
+        remote_register = str(msg.payload.decode('ascii')).split('.')
         if len(remote_register) > 1 and remote_register[0] == 'hb':
             #TODO: push the device's online duration
             device_id = int(remote_register[1], 16)
