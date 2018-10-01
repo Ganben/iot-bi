@@ -285,10 +285,12 @@ def on_message(client, userdata, msg):
         remote_register = str(msg.payload.decode('ascii')).split('.')
         if len(remote_register) > 1 and remote_register[0] == 'hb':
             #TODO: push the device's online duration
-            device_id = int(remote_register[1], 16)
-            time = int(remote_register[2])
+            #device_id = int(remote_register[1], 16)
+            #time = int(remote_register[2])
+            pass
         elif len(remote_register) == 1:
             new_device_id = int(remote_register[0], 16)
+            pass
         else:
             return
 
