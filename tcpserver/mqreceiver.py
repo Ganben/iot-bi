@@ -245,7 +245,7 @@ def on_message(client, userdata, msg):
         try:
             # device_id = struct.unpack("32s", msg.payload)
             # device_id_hex = ## modified from last change, hex string to int
-            dev_str = str(msg.payload).split('.')
+            dev_str = msg.payload.decode('ascii').split('.')
             
             # device_id = int(msg.payload, 16)
             # add = 1
