@@ -289,7 +289,7 @@ def on_message(client, userdata, msg):
             #time = int(remote_register[2])
             pass
         elif len(remote_register) == 1:
-            new_device_id = int(remote_register[0], 16)
+            #new_device_id = int(remote_register[0], 16)
             pass
         else:
             return
