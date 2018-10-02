@@ -4,7 +4,15 @@ from django.views.generic import (
     DetailView,
     View,
 )
+import pickle
+import redis
+
+
 from stats import models
+
+# retrieve pickled data from redis
+rpool = redis.ConnectionPool(host='localhost', port=6379, db=0)
+rd = redis.Redis(connection_pool=rpool)
 
 def context_gen(request):
     # generate context

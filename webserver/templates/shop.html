@@ -14,6 +14,7 @@
 {% block script %}
     {% comment %} var topic = {{}} {% endcomment %}
     var mqtopic = "{{shopmq}}";
+    var sessionid = "{{sessionid}}";
 {% autoescape off%}
     var ctx = document.getElementById("shopchart").getContext('2d');
     var data = {{chartdata}};
@@ -46,7 +47,7 @@
         }
     });
     // Create a client instance, path /ws or /
-    mqclient = new Paho.MQTT.Client(location.hostname, 9883, "/", mqtopic);
+    mqclient = new Paho.MQTT.Client(location.hostname, 9883, "/", sessionid);
     
     // set callback handlers
     mqclient.onConnectionLost = onConnectionLost;
@@ -56,9 +57,9 @@
     option = {
         onSuccess:onConnect,
         timeout: 3,
-        keepAliveInterval: 30,
-        userName: "guest",
-        password: "guest"
+        keepAliveInterval: 30
+        //userName: "guest",
+        //password: "guest"
     };
     
     // connect the client
