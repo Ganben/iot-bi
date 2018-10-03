@@ -283,14 +283,22 @@ def on_message(client, userdata, msg):
     elif msg.topic == 'remote':
         logger.info('receive %s : %s' %(msg.topic, msg.payload))
         remote_register = str(msg.payload.decode('ascii')).split('.')
-        if len(remote_register) > 1 and remote_register[0] == 'hb':
+        if len(remote_register) == 3 and remote_register[0] == 'hb':
             #TODO: push the device's online duration
             #device_id = int(remote_register[1], 16)
-            #time = int(remote_register[2])
-            pass
-        elif len(remote_register) == 1:
+            #time = int(remote_register[2]) # right now worked
+            try:
+                logger.debug('remote/hb/device:%s' % int(remote_register[1], 16))
+            except:
+                logger.error('hb parse error:%s' % remote_register)
+        elif len(remote_register) == 2 and remote_register[0] == 'wb':
             #new_device_id = int(remote_register[0], 16)
-            pass
+            websession = remote_register[1]
+            # need shopid from the msg
+            shopid = 1
+            body = generate_chart_data(shopid)
+
+            client.publish("shop%s" % shopid, body, qos=2)
         else:
             return
 
