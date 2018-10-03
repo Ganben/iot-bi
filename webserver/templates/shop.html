@@ -81,7 +81,8 @@
           label: 'web',
           data: 'hello'
       };
-      message = new Paho.MQTT.Message(JSON.stringify(obj_datas));
+      //message = new Paho.MQTT.Message(JSON.stringify(obj_datas));
+      message = new Paho.MQTT.Message('wb.'+sessionid);
       message.destinationName = "remote";
       mqclient.send(message);
     };

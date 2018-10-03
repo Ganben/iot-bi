@@ -4,6 +4,7 @@ from django.views.generic import (
     DetailView,
     View,
 )
+import uuid
 import pickle
 import redis
 
@@ -40,6 +41,13 @@ class ShopDetail(View):
         qd = models.DeviceDataLive.objects.filter(shop__id=qs.id)
         ctx = context_gen(request)
         ctx['shopmq'] = 'shop%s' % shopid
+        if request.session.get('ssid', False):
+            ssid = request.session.get('ssid')
+        else:
+            ssid = uuid.uuid4()
+            request.session['ssid'] = str(ssid)
+        
+        ctx['sessionid'] = str(ssid)
         ctx['chartdata'] = {
             'labels': ["%s" % d.device.id for d in list(qd)],
             # 'datasets': [{
