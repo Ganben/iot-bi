@@ -291,13 +291,14 @@ def on_message(client, userdata, msg):
                 logger.debug('remote/hb/device:%s' % int(remote_register[1], 16))
             except:
                 logger.error('hb parse error:%s' % remote_register)
-        elif len(remote_register) == 2 and remote_register[0] == 'wb':
+        elif len(remote_register) == 3 and remote_register[0] == 'wb':
             #new_device_id = int(remote_register[0], 16)
-            websession = remote_register[1]
+            websession = remote_register[2]
             # need shopid from the msg
-            shopid = 1
-            body = generate_chart_data(shopid)
+            shopid = int(remote_register[1])
 
+            body = generate_chart_data(shopid)
+            logger.info('web %s join in' % shopid)
             client.publish("shop%s" % shopid, body, qos=2)
         else:
             return

@@ -46,7 +46,7 @@ class ShopDetail(View):
         else:
             ssid = uuid.uuid4()
             request.session['ssid'] = str(ssid)
-        
+        ctx['shopid'] = shopid
         ctx['sessionid'] = str(ssid)
         ctx['chartdata'] = {
             'labels': ["%s" % d.device.id for d in list(qd)],

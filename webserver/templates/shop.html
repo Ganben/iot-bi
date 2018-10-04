@@ -14,6 +14,7 @@
 {% block script %}
     {% comment %} var topic = {{}} {% endcomment %}
     var mqtopic = "{{shopmq}}";
+    var shopid = "{{shopid}}";
     var sessionid = "{{sessionid}}";
 {% autoescape off%}
     var ctx = document.getElementById("shopchart").getContext('2d');
@@ -25,14 +26,16 @@
             datasets: [{
                 label: "# of Visits",
                 data: data.data,
-                {% comment %} backgroundColor: [
+                backgroundColor: [
                     'rgba(255,99,132, 0.2)',
-                    'rgba(54,162,235,0.2)'
+                    'rgba(54,162,235,0.2)',
+                    'rgba(255,99,132, 0.2)'
                 ],
                 borderColor: [
                     'rgba(255,99,132,1)',
-                    'rgba(54,162,235,1)'
-                ], {% endcomment %}
+                    'rgba(54,162,235,1)',
+                    'rgba(255,99,132,1)'
+                ],
                 borderWidth: 1
             }]
         },
@@ -82,7 +85,7 @@
           data: 'hello'
       };
       //message = new Paho.MQTT.Message(JSON.stringify(obj_datas));
-      message = new Paho.MQTT.Message('wb.'+sessionid);
+      message = new Paho.MQTT.Message('wb.'+shopid+'.'+sessionid);
       message.destinationName = "remote";
       mqclient.send(message);
     };
