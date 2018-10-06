@@ -11,7 +11,8 @@ import { ShopsComponent } from './shops/shops.component';
     ShopsComponent
   ],
   imports: [
-    BrowserModule
+    BrowserModule,
+    FormsModule
   ],
   providers: [],
   bootstrap: [AppComponent]
