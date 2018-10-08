@@ -1,12 +1,19 @@
-<p>
-  shops works!
-  <h2>{{shop.name}} Details</h2>
-  <div><span>id: </span>{{shop.id}}</div>
-  <div><span>stats: </span>{{shop.stats}} </div>
-</p>
 
-<div>
+<p> shops works!</p>  
+
+
+
+<div *ngIf="selectedShop">
+    <h2>{{selectedShop.name}} Details</h2>
+  <div><span>id: </span>{{selectedShop.id}}</div>
+  <div><span>stats: </span>{{selectedShop.stats}} </div>
   <label>name:
-    <input [(ngModel)]="shop.name" placeholder="name">
+    <input [(ngModel)]="selectedShop.name" placeholder="name">
   </label>
 </div>
+
+<ul class = "shops">
+  <li *ngFor = "let shop of shops" (click)="onSelect(shop)">
+    <span class="badge">{{shop.id}} </span> {{shop.name}}
+    </li>
+</ul>
