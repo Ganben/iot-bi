@@ -1,19 +1,19 @@
 
-<p> shops works!</p>  
-
-
-
-<div *ngIf="selectedShop">
+<!-- <div *ngIf="selectedShop">
     <h2>{{selectedShop.name}} Details</h2>
   <div><span>id: </span>{{selectedShop.id}}</div>
   <div><span>stats: </span>{{selectedShop.stats}} </div>
   <label>name:
     <input [(ngModel)]="selectedShop.name" placeholder="name">
   </label>
-</div>
+</div> -->
 
 <ul class = "shops">
-  <li *ngFor = "let shop of shops" (click)="onSelect(shop)">
-    <span class="badge">{{shop.id}} </span> {{shop.name}}
+  <li *ngFor = "let shop of shops">
+    <a routerLink="/detail/{{shop.id}}">
+      <span class="badge">{{shop.id}} </span> {{shop.name}}
+    </a>
     </li>
 </ul>
+
+<!-- <app-shop-detail [shop]="selectedShop"></app-shop-detail> -->
