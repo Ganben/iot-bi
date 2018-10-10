@@ -19,6 +19,9 @@
 {% autoescape off%}
     var ctx = document.getElementById("shopchart").getContext('2d');
     var data = {{chartdata}};
+    //need generate the next level state, preserve empty state;
+    //and generate colors array and border color array; in js
+
     var shopChart = new Chart(ctx, {
         type: 'bar',
         data: {
@@ -27,14 +30,14 @@
                 label: "# of Visits",
                 data: data.data,
                 backgroundColor: [
-                    'rgba(255,99,132, 0.2)',
-                    'rgba(54,162,235,0.2)',
+                    'rgba(255,99,132, 1)',
+                    'rgba(54,162,235,1)',
                     'green'
                 ],
                 borderColor: [
                     'rgba(255,99,132,1)',
                     'rgba(54,162,235,1)',
-                    'rgba(255,99,132,1)'
+                    'green'
                 ],
                 borderWidth: 1
             }]
@@ -42,10 +45,8 @@
         options: {
             legend: {
                 display: true,
-                labels: {
-                    position: 'left'
-                }
-            }
+                position: 'bottom'
+            },
             scales: {
                 yAxes: [{
                     ticks: {
@@ -55,6 +56,10 @@
             }
         }
     });
+    let colorarray = function(datalist) {
+      return ['red', 'red', 'green'];
+    };
+
     // Create a client instance, path /ws or /
     mqclient = new Paho.MQTT.Client(location.hostname, 9883, "/", sessionid);
     
