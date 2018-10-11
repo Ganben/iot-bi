@@ -283,7 +283,7 @@ def on_message(client, userdata, msg):
     elif msg.topic == 'remote':
         logger.info('receive %s : %s' %(msg.topic, msg.payload))
         remote_register = str(msg.payload.decode('ascii')).split('.')
-        if len(remote_register) == 3 and remote_register[0] == 'hb':
+        if len(remote_register) == 4 and remote_register[0] == 'hb':
             #TODO: push the device's online duration
             #device_id = int(remote_register[1], 16)
             #time = int(remote_register[2]) # right now worked
@@ -291,6 +291,9 @@ def on_message(client, userdata, msg):
                 logger.debug('remote/hb/device:%s' % int(remote_register[1], 16))
             except:
                 logger.error('hb parse error:%s' % remote_register)
+            device_id = int(remote_register[1], 16)
+            time = int(remote_register[2]) # in munite
+            live_status = parseSigStatus(remote_register[3]) # TODO: need filter
         elif len(remote_register) == 3 and remote_register[0] == 'wb':
             #new_device_id = int(remote_register[0], 16)
             websession = remote_register[2]
@@ -305,6 +308,18 @@ def on_message(client, userdata, msg):
 
     else:
         logger.info('receive %s : %s' %(msg.topic, msg.payload))
+
+def parseSigStatus(s):
+    if len(s) != 4:
+        return [1,1,1,1]
+    else:
+        r = []
+        for i in s:
+            if i == '1':
+                r.append(1)
+            elif i == '0':
+                r.append(0)
+        return r
 
 # c = client.Client(transport="websockets", client_id="receiver")
 c = client.Client(client_id="receiver")
