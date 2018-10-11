@@ -23,10 +23,10 @@ int value = 0;
 int cc = 0;
 //test data bytemsg;
 //const char bytemsg[12] = {0x01,0x01,0x01,0x01,0x01,0x00,0x01,0x01,0x02,0x01,0x01,0x01};
-const char* hexmsg = "0000000001"; //device id
+const char* hexmsg = "00000001"; //device id
 //"8fad12f5d9";
 // for buttun/high-low voltage signal
-const int s1Pin = 15;
+const int s1Pin = 1;
 const int s2Pin = 13;
 const int s3Pin = 12;
 const int s4Pin = 5;
@@ -37,6 +37,8 @@ int signalvalue[4] = {1, 1, 1, 1};
 int b1[4] = {1, 1, 1, 1}; 
 int b2[4] = {1, 1, 1, 1};
 int b3[4] = {1, 1, 1, 1};
+int b4[4] = {1, 1, 1, 1};
+char sigState[32];  //state of signal in format 1010 alike;
 int accumulate = 0;
 void setup() {
   //define IO
@@ -103,12 +105,13 @@ int filter(int which) {
 
   int i;
   for (i=0; i<4; i++){
+      b4[i] = b3[i];
       b3[i] = b2[i];
       b2[i] = b1[i];
       b1[i] = signalvalue[i];
   }
   
-  if (b1[which] + b2[which] + b3[which] < 2) {
+  if (b1[which] + b2[which] + b3[which] > 2) {
     return which+1;
   } else {
     return -99;
@@ -120,19 +123,19 @@ int signalcompare(){
   
   int i;
   for (i =0; i<4; i++) {
-    //b3[i] = HIGH;
-    b2[i] = HIGH;
-    b1[i] = HIGH;
+    b3[i] = LOW;
+    b2[i] = LOW;
+    b1[i] = LOW;
   }
   
   for (i = 0; i<4; i++){
-    if (signalvalue[i] != b3[i] && signalvalue[i] == LOW) {
+    if (signalvalue[i] != b4[i] && signalvalue[i] == HIGH) {
       return i;
       break;
     }
   }
   for (i = 0; i<4; i++){
-    b3[i] = signalvalue[i];
+    b4[i] = signalvalue[i];
     //update b3 for state compare
   }
   return -9;
@@ -155,6 +158,7 @@ void reconnect() {
       Serial.println("connected\n");
       // Once connected, publish an announcement...
       mclient.publish("remote", hexmsg);
+      //snprintf(msg, 75, "%s.%s", signalvalue[0], signalvalue[1], signalvalue[2], signalvalue[3]);
       // ... and resubscribe
       //mclient.subscribe("remote");
       display.print("TCP connected", 2);
@@ -207,13 +211,15 @@ void loop() {
     //turn LED on;
 //    Serial.print("button high");
 //    digitalWrite(ledPin, HIGH);
-    display.print("b=H..--");
+    display.print("----");
     delay(5);
     Serial.print("bs<0");
   } else {
     //turn LED off;
 //    digitalWrite(ledPin, LOW);
-    display.print("b=L..--");
+    display.print("b=H..--");
+    Serial.print(buttonState);
+    readSignal();
     delay(20);
     cc = filter(buttonState);
     Serial.print(cc);
@@ -222,6 +228,9 @@ void loop() {
     Serial.print(cc);
     delay(80);
     
+    readSignal();
+    cc = filter(buttonState);
+    delay(20);
     readSignal();
     cc = filter(buttonState);
     Serial.print(cc);
@@ -241,11 +250,13 @@ void loop() {
   }
   }
   long now = millis();
-
-  if (now - lastMsg > 30000) {
+  //interval = 60s
+  if (now - lastMsg > 60000) {
     lastMsg = now;
     ++value;
-    snprintf (msg, 75, "hb.%s.%ld", hexmsg, value);
+    // kw=hb, str=device_id, ld=time_stamp, str=status 1111
+    snprintf(sigState, 32, "%d%d%d%d", signalvalue[0], signalvalue[1], signalvalue[2], signalvalue[3]);
+    snprintf (msg, 75, "hb.%s.%ld.%s", hexmsg, value, sigState);
     Serial.print("heartbeat:");
     Serial.println(msg);
 //    if (value % 3 == 0) {
