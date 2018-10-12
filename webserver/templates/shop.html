@@ -105,7 +105,7 @@
     function onMessageArrived(message) {
       console.log("onMessageArrived:"+message.payloadString);
       jmessage = JSON.parse(message.payloadString);
-      //$('#messages').append('<span>:: ' + message.payloadString + '</span>');
+      $('#messages').append('<p>'+this.getHours() +jmessage.label + 'th device is having <span>:: ' + jmessage.data + 'th visit;</span></p>');
       //data update
       c = 0;
       for (var prop in data.labels) {
