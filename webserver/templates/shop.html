@@ -21,7 +21,7 @@
     var data = {{chartdata}};
     //need generate the next level state, preserve empty state;
     //and generate colors array and border color array; in js
-
+    var starttime = this.window.Date.now() / 1000;
     var shopChart = new Chart(ctx, {
         type: 'doughnut',
         data: {
@@ -105,7 +105,8 @@
     function onMessageArrived(message) {
       console.log("onMessageArrived:"+message.payloadString);
       jmessage = JSON.parse(message.payloadString);
-      $('#messages').append('<p>'+this.getHours() +jmessage.label + 'th device is having <span>:: ' + jmessage.data + 'th visit;</span></p>');
+      deltatime = window.Date.now() / 1000 - starttime;
+      $('#messages').append('<p>+'+deltatime.toFixed(3)+'s:' +jmessage.label + 'th device is having <span>:: ' + jmessage.data + 'th visit;</span></p>');
       //data update
       c = 0;
       for (var prop in data.labels) {
