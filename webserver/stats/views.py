@@ -32,6 +32,8 @@ def index(request):
 class ShopDetail(View):
     # the detail shows live data
     model = models.ShopDataLive
+    # this model's live data will be stored in redis
+    # TODO: new dict-like data fit new front
     # template name
     template_name = 'shop.html'
     def get(self, request, shopid =1):
@@ -58,3 +60,20 @@ class ShopDetail(View):
         }
 
         return render(request, self.template_name, context=ctx)
+
+class DeviceView(View):
+    # the device which have 4 pins, live status, load/empty/Null
+    # and history line figure will query daily data
+    template_name = 'device.html'
+    def get(self, request, device = 1):
+        # get redis
+
+        # generate new
+
+        # session
+        if request.session.get('ssid', False):
+            ssid = request.session.get('ssid')
+        else:
+            ssid = uuid.uuid4()
+            request.session['ssid'] = str(ssid)
+        

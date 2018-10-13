@@ -1,15 +1,17 @@
 {% extends "base.html" %}
 {% block content %}
-<p class="lead">
+<div class="col-lg-2">
+    <div class="row h-600">
         <div class="chart-container" style="position: relative; height:40vh; width:80vw">
                 <h4 class="mt-5">Device Live Stats</h4>
                 of ShopName, current datetime
-                <canvas id="shopchart" width="800" height="400"></canvas>
+                <canvas id="shopchart" width="800" height="600"></canvas>
             </div>
-            
-</p>
-{% comment %} <button onclick="mqclient.connect(option);">Connect</button> {% endcomment %}
-<div id="messages"></div>
+        </div>
+
+
+</div>
+<div class="fixed-bottom" id="messages"></div>
 {% endblock %}
 {% block script %}
     {% comment %} var topic = {{}} {% endcomment %}
