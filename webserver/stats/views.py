@@ -65,10 +65,19 @@ class DeviceView(View):
     # the device which have 4 pins, live status, load/empty/Null
     # and history line figure will query daily data
     template_name = 'device.html'
+
     def get(self, request, device = 1):
         # get redis
+        rkey = 'dev=%s' % device
+        if rd.exists(rkey):
+            d = rd.get(rkey)
+            # load some from binary
+        else:
+            pass
+            # generate some         
 
-        # generate new
+            # generate new
+            # save to rd
 
         # session
         if request.session.get('ssid', False):
@@ -76,4 +85,5 @@ class DeviceView(View):
         else:
             ssid = uuid.uuid4()
             request.session['ssid'] = str(ssid)
+        ctx = {}
         
