@@ -12,6 +12,7 @@ import sys
 import struct
 import json
 import logging
+import unittest
 
 import datetime
 import pickle
@@ -182,3 +183,17 @@ c.connect("127.0.0.1", 1883, 60)
 if __name__ == "__main__":
     
     c.loop_forever()
+
+
+class Tests(unittest.TestCase):
+    def test1(self):
+        s1 = ShopLiveChart
+        s1.shop_ids = {
+            1:12,
+            2:11,
+            3:13
+        }
+        po = pickle.dumps(s1)
+        rd.set('somekey', po)
+        uo = pickle.loads(rd.get('somekey'))
+        self.assertEqual(True, s1 == uo)
