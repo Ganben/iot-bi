@@ -24,6 +24,18 @@
     //need generate the next level state, preserve empty state;
     //and generate colors array and border color array; in js
     var starttime = this.window.Date.now() / 1000;
+    let colorarray = function(datalist) {
+        var result = [];
+        var sequence = ["red", "blue", "yellow", "green"];
+        var i = 0;
+        var f = 0;
+        for (var prop in datalist) {
+          f = i % 4;
+          result.push(sequence[f]);
+          i = i + 1;
+        };
+      return result;
+    };
     var shopChart = new Chart(ctx, {
         type: 'doughnut',
         data: {
@@ -31,16 +43,8 @@
             datasets: [{
                 label: "# of Visits",
                 data: data.data,
-                backgroundColor: [
-                    'rgba(255,99,132, 1)',
-                    'rgba(54,162,235,1)',
-                    'green'
-                ],
-                borderColor: [
-                    'rgba(255,99,132,1)',
-                    'rgba(54,162,235,1)',
-                    'green'
-                ],
+                backgroundColor: colorarray(data.data),
+                borderColor: colorarray(data.data),
                 borderWidth: 1
             }]
         },
@@ -58,9 +62,7 @@
             }
         }
     });
-    let colorarray = function(datalist) {
-      return ['red', 'red', 'green'];
-    };
+
 
     // Create a client instance, path /ws or /
     mqclient = new Paho.MQTT.Client(location.hostname, 9883, "/", sessionid);
@@ -107,6 +109,7 @@
     function onMessageArrived(message) {
       console.log("onMessageArrived:"+message.payloadString);
       jmessage = JSON.parse(message.payloadString);
+      //will be a list;
       deltatime = window.Date.now() / 1000 - starttime;
       $('#messages').append('<p>+'+deltatime.toFixed(3)+'s:' +jmessage.label + 'th device is having <span>:: ' + jmessage.data + 'th visit;</span></p>');
       //data update
@@ -116,6 +119,7 @@
           if (data.labels[c] === jmessage.label) {
               {% comment %} console.log(prop) {% endcomment %}
               data.data[c] = jmessage.data;
+              console.log('matched')
               break;
           } else {
               console.log(c)

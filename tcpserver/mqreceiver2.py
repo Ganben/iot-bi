@@ -67,8 +67,11 @@ class DevShopMap:
 #    device_id = []
     shop_ids = {}
 
+class ShopDevMap:
+    device_ids = {}
+
 class ShopLiveChart:
-    shop_ids = {}
+    shop_ids = {}  # should be pygtrie for prefix advantage
 
 class DeviceLiveChart:
     device_ids = {}
@@ -150,7 +153,7 @@ def on_message(client, userdata, msg):
             # need shopid from the msg
             shopid = int(remote_register[1])
 
-            body = generate_chart_data(shopid)
+            body = generate_shopchart_data(shopid)
             logger.info('web %s join in' % shopid)
             client.publish("shop%s" % shopid, body, qos=2)
         else:
@@ -158,6 +161,9 @@ def on_message(client, userdata, msg):
 
     else:
         logger.info('receive %s : %s' %(msg.topic, msg.payload))
+
+def generate_shopchart_data(shopid):
+    devices = 
 
 def parseSigStatus(s):
     if len(s) != 4:
