@@ -36,6 +36,12 @@
         };
       return result;
     };
+    var labelMap = new Map();
+    for (var prop in data.labels) {
+      labelMap.set(data.labels[prop], prop);
+    };
+
+    
     var shopChart = new Chart(ctx, {
         type: 'doughnut',
         data: {
@@ -108,22 +114,16 @@
     // called when a message arrives
     function onMessageArrived(message) {
       console.log("onMessageArrived:"+message.payloadString);
-      jmessage = JSON.parse(message.payloadString);
+      jmessages = JSON.parse(message.payloadString);
       //will be a list;
       deltatime = window.Date.now() / 1000 - starttime;
-      $('#messages').append('<p>+'+deltatime.toFixed(3)+'s:' +jmessage.label + 'th device is having <span>:: ' + jmessage.data + 'th visit;</span></p>');
+      $('#messages').append('<p>+'+deltatime.toFixed(3)+'s:' +jmessages[0] + ' <span>!</span></p>');
       //data update
       c = 0;
-      for (var prop in data.labels) {
-          console.log('loop')
-          if (data.labels[c] === jmessage.label) {
-              {% comment %} console.log(prop) {% endcomment %}
-              data.data[c] = jmessage.data;
-              console.log('matched')
-              break;
-          } else {
-              console.log(c)
-          };
+
+      for (var prop in jmessages) {
+          console.log(jmessages[prop])
+          data.data[labelMap.get(jmessages[prop].label)] = jmessages[prop].data;
           c = c + 1;
       };
       //chart update

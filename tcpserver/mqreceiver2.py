@@ -17,6 +17,8 @@ import unittest
 import datetime
 import pickle
 
+import pygtrie
+
 import redis
 from paho.mqtt import client
 import mysql.connector 
@@ -66,15 +68,108 @@ rd = redis.Redis(connection_pool=rpool)
 class DevShopMap:
 #    device_id = []
     shop_ids = {}
+dsMap = pygtrie.CharTrie()
 
 class ShopDevMap:
     device_ids = {}
 
+sdMap = pygtrie.CharTrie()
+
 class ShopLiveChart:
     shop_ids = {}  # should be pygtrie for prefix advantage
+    def gen(self, shopid):
+        return {
+        'id': shopid,
+        'labels': [
+            1,
+            2,
+            3
+        ],
+        'data': [
+            3,
+            4,
+            5
+        ],
+        'status': [
+            'E',
+            'N',
+            'E'
+        ]
+        }
+liveShopChart = pygtrie.CharTrie()
 
 class DeviceLiveChart:
     device_ids = {}
+    def gen(self, label):
+        return {
+        'label':label,
+        'names': [
+            "product1",
+            "product2",
+            "product3",
+            "product4"
+        ],
+        'stats':[
+            4,
+            5,
+            6,
+            7
+        ],
+        'status': [
+            1,
+            0,
+            0,
+            1
+        ]
+        }
+liveDeviceChart = pygtrie.CharTrie()
+
+# init with sample data
+def init_data():
+    # fill all trie with specified data
+    dsMap['1'] = 1
+    dsMap['2'] = 1
+    dsMap['3'] = 1
+    dsMap['4'] = 2
+    dsMap['5'] = 2
+    dsMap['6'] = 3
+    sdMap['1'] = [1,2,3]
+    sdMap['2'] = [4,5]
+    sdMap['3'] = [6]
+    shoplive = ShopLiveChart()
+    devicelive = DeviceLiveChart()
+    for i in [1,2,3,4,5,6]:
+        liveDeviceChart[str(i)] = devicelive.gen(i)
+
+    for i in [1,2,3]:
+        liveShopChart[str(i)] = shoplive.gen(i)
+
+def load_data():
+    # key 1
+    key_ldc = 'livedevicechart'
+    key_lsc = 'liveshopchart'
+    key_sdm = 'sdMap'
+    key_dsm = 'dsMap'
+    if rd.exists(key_dsm):
+        dsMap = pickle.loads(rd.get(key_dsm))
+    else:
+        pass
+    
+    if rd.exists(key_sdm):
+        sdMap = pickle.loads(rd.get(key_sdm))
+    else:
+        pass
+
+    if rd.exists(key_ldc):
+        liveDeviceChart = pickle.loads(rd.get(key_ldc))
+    else:
+        pass
+
+    if rd.exists(key_lsc):
+        liveShopChart = pickle.loads(rd.get(key_lsc))
+    else:
+        pass
+    
 
 ### MQTT PART
 # def connect to local web mqtt
@@ -95,7 +190,7 @@ def on_message(client, userdata, msg):
             dev_str = msg.payload.decode('ascii').split('.')
             
             device_id = int(dev_str[0], 16)
-            pin_id = int(device_id[0], 16)
+            pin_id = int(dev_str[0], 16)
             logger.info("dev_s:%s" % dev_str)
 
         except:
@@ -163,7 +258,16 @@ def on_message(client, userdata, msg):
         logger.info('receive %s : %s' %(msg.topic, msg.payload))
 
 def generate_shopchart_data(shopid):
-    devices = 
+    
+    d = liveShopChart.get(str(shopid))
+    l = []
+    for i in range(len(d['labels'])):
+        l.append({
+            'label':str(d['labels'][i]),
+            'data': d['data'][i]
+            })
+    return json.dumps(l)
+
 
 def parseSigStatus(s):
     if len(s) != 4:
@@ -187,7 +291,7 @@ c.connect("127.0.0.1", 1883, 60)
 
 
 if __name__ == "__main__":
-    
+    init_data()
     c.loop_forever()
 
 
