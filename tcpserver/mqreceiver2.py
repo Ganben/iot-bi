@@ -77,7 +77,8 @@ sdMap = pygtrie.CharTrie()
 
 class ShopLiveChart:
     shop_ids = {}  # should be pygtrie for prefix advantage
-    def gen(self, shopid):
+    @classmethod
+    def gen(cls, shopid):
         return {
         'id': shopid,
         'labels': [
@@ -86,21 +87,22 @@ class ShopLiveChart:
             3
         ],
         'data': [
-            3,
-            4,
-            5
+            1,
+            1,
+            1
         ],
         'status': [
-            'E',
             'N',
-            'E'
+            'N',
+            'N'
         ]
         }
 liveShopChart = pygtrie.CharTrie()
 
 class DeviceLiveChart:
     device_ids = {}
-    def gen(self, label):
+    @classmethod
+    def gen(cls, label):
         return {
         'label':label,
         'names': [
@@ -109,16 +111,17 @@ class DeviceLiveChart:
             "product3",
             "product4"
         ],
+        'sum': 4,
         'stats':[
-            4,
-            5,
-            6,
-            7
+            1,
+            1,
+            1,
+            1
         ],
         'status': [
             1,
-            0,
-            0,
+            1,
+            1,
             1
         ]
         }
@@ -139,10 +142,10 @@ def init_data():
     shoplive = ShopLiveChart()
     devicelive = DeviceLiveChart()
     for i in [1,2,3,4,5,6]:
-        liveDeviceChart[str(i)] = devicelive.gen(i)
+        liveDeviceChart[str(i)] = DeviceLiveChart.gen(i)
 
     for i in [1,2,3]:
-        liveShopChart[str(i)] = shoplive.gen(i)
+        liveShopChart[str(i)] = ShopLiveChart.gen(i)
 
 def load_data():
     # key 1
@@ -170,6 +173,51 @@ def load_data():
     else:
         pass
     
+def add_device_chart(device_id, device_pin):
+    # add one to live device chart
+    # int str para2 int
+    if liveDeviceChart.get(str(device_id), False):
+        d = liveDeviceChart.get(str(device_id))
+        d['sum'] += 1
+        d['stats'][device_pin] += 1
+
+    else:
+        d = DeviceLiveChart.gen(int(device_id))
+        d['sum'] += 1
+        d['stats'][device_pin] += 1
+        liveDeviceChart[str(device_id)] = d 
+
+def add_shop_chart(device_id, shopid):
+    # add one to live shop chart
+    # para1 int device id, para2 int shopid
+    if liveShopChart.get(str(shopid), False):
+        d = liveShopChart.get(str(shopid))
+        for i in range(len(d['labels'])):
+            if device_id == d['labels'][i]:
+                d['data'][i] += 1
+                return
+        # if not exist, append one
+        d['labels'].append(device_id)
+        d['data'].append(1)
+        return
+    else:
+        d = ShopLiveChart.gen(shopid)
+        d['labels'] = [device_id]
+        d['data'] = [1]
+        liveShopChart[str(shopid)] = d
+        return
+
+def update_device_hb_status(device_id, status_array):
+    # update livedevicechart, 
+    # para 1 device id, para2 status array [1,1,1,1]
+    if liveDeviceChart.get(str(device_id), False):
+        logger.info("hb status array update")
+        d = liveDeviceChart.get(str(device_id))
+        d['status'] = status_array
+        return
+    else:
+        logger.warn("hb status not find")
+        return
 
 ### MQTT PART
 # def connect to local web mqtt
@@ -214,7 +262,10 @@ def on_message(client, userdata, msg):
             # deltaChange.put_shop(shopid, 1)
             # deltaChange.update(device_id)
             # body = generate_chart_data(device_id)
-
+        shopid = dsMap.get(str(device_id))
+        add_device_chart(device_id, device_pin)
+        add_shop_chart(device_id, shopid)
+        #TODO body = 
         try:
             client.publish("shop%s" % shopid, body, qos=2)
             logger.info('sent updated shop %s' % shopid)
@@ -235,7 +286,8 @@ def on_message(client, userdata, msg):
             device_id = int(remote_register[1], 16)
             time = int(remote_register[2]) # in munite
             live_status = parseSigStatus(remote_register[3]) # TODO: need filter
-        
+            # shopid = dsMap.get(str(device_id))
+            update_device_hb_status(device_id, live_status)
         elif len(remote_register) == 3 and remote_register[0] =='hb':
             #backward compatible
             device_id = int(remote_register[1], 16)
@@ -291,7 +343,8 @@ c.connect("127.0.0.1", 1883, 60)
 
 
 if __name__ == "__main__":
-    init_data()
+    init_data()  # for test mode
+    #load_data() # for running normally
     c.loop_forever()
 
 
