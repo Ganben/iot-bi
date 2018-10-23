@@ -15,27 +15,20 @@
                       </tr>
                     </thead>
                     <tbody>
+                      {% for ele in pinlist %}
                       <tr>
-                        <th scope="row">1</th>
-                        <td>Empty</td>
-                        <td>AirPods</td>
-                        <td>199</td>
+                        <th scope="row">ele.id</th>
+                        <td>ele.status</td>
+                        <td>ele.name</td>
+                        <td>ele.stats</td>
                       </tr>
-                      <tr>
-                        <th scope="row">2</th>
-                        <td>Loaded</td>
-                        <td>Power Adapter</td>
-                        <td>219</td>
-                      </tr>
-                      <tr>
-                        <th scope="row">3</th>
-                        <td>Loaded</td>
-                        <td>Lightning Cable</td>
-                        <td>332</td>
-                      </tr>
+                      {% endfor %}
+
 
                     </tbody>
                   </table>
+      {{label}}, {{sum}}
+
       </div>
       <div class="col">
       </div>
@@ -43,5 +36,10 @@
 {% endblock %}
 
 {% block script %}
+
+
+{% autoescape off%}
+
+{% endautoescape %}
 
 {% endblock %}
