@@ -207,6 +207,17 @@ def add_shop_chart(device_id, shopid):
         liveShopChart[str(shopid)] = d
         return
 
+def gen_shop_update_single(shopid, device_id):
+    d = liveShopChart.get(str(shopid))
+    r = []
+    for i in range(len(d['labels'])):
+        if d['labels'][i] == device_id:
+            r.append({
+                'label': str(device_id),
+                'data': d['data'][i]
+            })
+    return json.dumps(r)
+
 def update_device_hb_status(device_id, status_array):
     # update livedevicechart, 
     # para 1 device id, para2 status array [1,1,1,1]
@@ -265,7 +276,7 @@ def on_message(client, userdata, msg):
         shopid = dsMap.get(str(device_id))
         add_device_chart(device_id, device_pin)
         add_shop_chart(device_id, shopid)
-        #TODO body = 
+        body = gen_shop_update_single(shopid, device_id) 
         try:
             client.publish("shop%s" % shopid, body, qos=2)
             logger.info('sent updated shop %s' % shopid)
