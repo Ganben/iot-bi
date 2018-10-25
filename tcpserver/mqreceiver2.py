@@ -355,6 +355,8 @@ c.connect("127.0.0.1", 1883, 60)
 
 if __name__ == "__main__":
     init_data()  # for test mode
+    so = pickle.dumps(liveDeviceChart)
+    rd.set('livedevicechart', so)
     #load_data() # for running normally
     c.loop_forever()
 

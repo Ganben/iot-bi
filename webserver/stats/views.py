@@ -7,7 +7,8 @@ from django.views.generic import (
 import uuid
 import pickle
 import redis
-
+import pygtrie
+import json
 
 from stats import models
 
@@ -68,12 +69,15 @@ class DeviceView(View):
 
     def get(self, request, device = 1):
         # get redis
-        rkey = 'dev=%s' % device
+        # rkey = 'dev=%s' % device
+        rkey = 'livedevicechart'
         if rd.exists(rkey):
-            d = rd.get(rkey)
+            # d = rd.get(rkey)
             # load some from binary
+            d = pickle.loads(rd.get(rkey))
+
         else:
-            pass
+            return 'rd not found'
             # generate some         
 
             # generate new
@@ -86,4 +90,24 @@ class DeviceView(View):
             ssid = uuid.uuid4()
             request.session['ssid'] = str(ssid)
         ctx = {}
+        ctx['sessionid'] = str(ssid)
+        ctx['devmq'] = 'dev%s' % device
+        ctx['pinlist'] = gen_dev_pin(d.get(str(device)))
+        ctx['label'] = d.get(str(device))['label']
+        ctx['sum'] = d.get(str(device))['sum']
         
+        return render(request, self.template_name, context=ctx)
+
+def gen_dev_pin(devlive):
+    #gen live dev data
+    r = []
+    print('%s' % devlive['stats'])
+    for i in range(4):
+        r.append({
+            'id': i+1,
+            'status': devlive['status'][i],
+            'stats': devlive['stats'][i],
+            'name': devlive['names'][i]
+        })
+        
+    return r

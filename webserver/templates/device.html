@@ -11,23 +11,23 @@
                         <th scope="col">#Pin</th>
                         <th scope="col">Status</th>
                         <th scope="col">Name</th>
-                        <th scope="col">Total Status</th>
+                        <th scope="col">Accesses</th>
                       </tr>
                     </thead>
                     <tbody>
                       {% for ele in pinlist %}
                       <tr>
-                        <th scope="row">ele.id</th>
-                        <td>ele.status</td>
-                        <td>ele.name</td>
-                        <td>ele.stats</td>
+                        <th scope="row">{{ele.id}}</th>
+                        <td>{% if ele.status == 1 %} Loaded {%else%} Empty {%endif%}</td>
+                        <td>{{ele.name}}</td>
+                        <td>{{ele.stats}}</td>
                       </tr>
                       {% endfor %}
 
 
                     </tbody>
                   </table>
-      {{label}}, {{sum}}
+      Device: {{label}} has {{sum}} accesses today;
 
       </div>
       <div class="col">

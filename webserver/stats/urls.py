@@ -7,5 +7,6 @@ from stats import (
 
 urlpatterns = [
     path('detail/<int:shopid>/', views.ShopDetail.as_view(), name='shop'),
+    path('dev/<int:device>/', views.DeviceView.as_view(), name = 'device'),
     path('', views.index, name='index'),
 ]
