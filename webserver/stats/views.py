@@ -51,7 +51,14 @@ class ShopDetail(View):
             request.session['ssid'] = str(ssid)
         ctx['shopid'] = shopid
         ctx['sessionid'] = str(ssid)
+        # following data is from redis live
+        ro = pickle.loads(rd.get('liveshopchart'))
         ctx['chartdata'] = {
+            
+        }
+
+        # following data is from mysql history
+        ctx['charttable'] = {
             'labels': ["%s" % d.device.id for d in list(qd)],
             # 'datasets': [{
             #     'label': "visits",

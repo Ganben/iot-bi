@@ -23,8 +23,14 @@ import json
 import logging
 import datetime
 import pickle
+import os
+import time
+import threading
+import queue
+import asyncio
 
 import redis
+import pygtrie
 # from paho.mqtt import client
 import mysql.connector 
 
@@ -83,8 +89,62 @@ class DaemonThreader:
         
     def addajob(self, job):
         pass
+
+class WorkerThread(threading.Thread):
+    """
+    worker thread that takes redis live data to db
+    """
+    def __init__(self, iq, oq):
+        super(WorkerThread, self).__init__()
+        self.iq = iq
+        self.oq = oq
+        self.stoprequest = threading.Event()
     
+    def run(self):
+        # a time job here?
+        #
+        while not self.stoprequest.isSet():
+            try:
+                # blocking get with time out 0.05s
+                t = 3600*24
+                
+                # time.sleep(t)
+                job_in = self.iq.get(True, 0.05)
+                if datetime.datetime.today() - job_in >= datetime.timedelta(minutes=10):
+                    
+                    job_out = self.process(job_in)
+                    
+                    self.iq.put(datetime.datetime.today())
+                    try:
+                        self.oq.put(job_out)
+                    except asyncio.QueueFull:
+                        self.oq.get()
+                else:
+                    # put back it to queue
+                    self.iq.put(job_in)
+                    time.sleep(3600)
+                
+            except queue.Empty:
+                continue
+    def process(self, job_in):
+        # do nothing
+        # TODO: update live data to sql
+        # TODO: clear existing trie and refresh redis
+
+
+
+
+
+        return 1
 # data structure part
+#SQL s from dev.mysql.com/doc/connector-python/en/connector-python-example-cursor-transaction.html
+
+INSERT_DEVICEDAILY = ("INSERT INTO stats_devicedaily "
+                    "(date, sums, pin1, pin2, pin3, pin4, device_id)"
+                    "VALUES (%s, %s, %d, %d, %d, %d, %d, %d)")
+
+DEVICE_DATA = ()
+
 
 # 1. active device data
 class ActiveDevice:
@@ -129,3 +189,15 @@ class DevShopMapManager(object):
     def feed(self, data):
         pass
         #to parse device to shop 
+
+
+if __name__ == "__main__":
+    # start multi threading
+    in_queue = queue.Queue(maxsize=10)
+    out_queue = queue.Queue(maxsize=100)
+    # pool = [ WorkerThread(iq=in_queue,oq=out_queue) for i in range(2)]
+    # for p in pool:
+    #     time.sleep(100)
+    #     p.start()
+    t = WorkerThread(iq=in_queue, oq=out_queue)
+    t.start()

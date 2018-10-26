@@ -19,7 +19,11 @@ class Device(models.Model):
     status = models.BooleanField()
     first_date = models.DateField()
     last_date = models.DateTimeField(auto_now=True)
-
+    pin1_sum = models.IntegerField()
+    pin2_sum = models.IntegerField()
+    pin3_sum = models.IntegerField()
+    pin4_sum = models.IntegerField()
+    activated = models.BooleanField(default=False)
     # def inc(self):
     #     self.visited += 1
     #     # and shop's counts add too
@@ -80,3 +84,18 @@ class DeviceMonth(models.Model):
     device = models.ForeignKey(Device, on_delete=models.DO_NOTHING, null=True)
     month = models.DateField(auto_now_add=True)
     counts = models.IntegerField(default=0)
+
+class ShopDaily(models.Model):
+    shop = models.ForeignKey(Shop, on_delete=models.DO_NOTHING, null=True)
+    date = models.DateField(auto_now_add=True)
+    sums = models.IntegerField(default=0)
+
+class DeviceDaily(models.Model):
+    device = models.ForeignKey(Device, on_delete=models.DO_NOTHING, null = True)
+    date = models.DateField(auto_now_add=True)
+    sums = models.IntegerField(default=0)
+    pin1 = models.IntegerField(default=0)
+    pin2 = models.IntegerField(default=0)
+    pin3 = models.IntegerField(default=0)
+    pin4 = models.IntegerField(default=0)
+    
