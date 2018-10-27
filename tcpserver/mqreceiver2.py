@@ -81,6 +81,7 @@ class ShopLiveChart:
     def gen(cls, shopid):
         return {
         'id': shopid,
+        'sum': 1,
         'labels': [
             1,
             2,
@@ -180,12 +181,14 @@ def add_device_chart(device_id, device_pin):
         d = liveDeviceChart.get(str(device_id))
         d['sum'] += 1
         d['stats'][device_pin] += 1
-
+        logger.debug('--add visits device--')
     else:
         d = DeviceLiveChart.gen(int(device_id))
         d['sum'] += 1
         d['stats'][device_pin] += 1
         liveDeviceChart[str(device_id)] = d 
+    rd.set('livedevicechart', pickle.dumps(liveDeviceChart))
+    logger.info('--rd livedevicechart updated')
 
 def add_shop_chart(device_id, shopid):
     # add one to live shop chart
@@ -195,10 +198,12 @@ def add_shop_chart(device_id, shopid):
         for i in range(len(d['labels'])):
             if device_id == d['labels'][i]:
                 d['data'][i] += 1
+                logger.debug('--shop chart added')
                 return
         # if not exist, append one
         d['labels'].append(device_id)
         d['data'].append(1)
+        logger.debug('--shop chart newed')
         return
     else:
         d = ShopLiveChart.gen(shopid)
@@ -206,6 +211,11 @@ def add_shop_chart(device_id, shopid):
         d['data'] = [1]
         liveShopChart[str(shopid)] = d
         return
+
+def update_shop_chart_redis():
+    #
+    rd.set('liveshopchart', pickle.dumps(liveShopChart))
+    return
 
 def gen_shop_update_single(shopid, device_id):
     d = liveShopChart.get(str(shopid))
@@ -276,6 +286,7 @@ def on_message(client, userdata, msg):
         shopid = dsMap.get(str(device_id))
         add_device_chart(device_id, device_pin)
         add_shop_chart(device_id, shopid)
+        update_shop_chart_redis()
         body = gen_shop_update_single(shopid, device_id) 
         try:
             client.publish("shop%s" % shopid, body, qos=2)
@@ -303,7 +314,7 @@ def on_message(client, userdata, msg):
             #backward compatible
             device_id = int(remote_register[1], 16)
             time = int(remote_register[2])
-            
+            update_device_hb_status(device_id, [1,1,1,1])
         
         elif len(remote_register) == 3 and remote_register[0] == 'wb':
             #new_device_id = int(remote_register[0], 16)
@@ -357,6 +368,7 @@ if __name__ == "__main__":
     init_data()  # for test mode
     so = pickle.dumps(liveDeviceChart)
     rd.set('livedevicechart', so)
+    rd.set('liveshopchart', pickle.dumps(liveShopChart))
     #load_data() # for running normally
     c.loop_forever()
 

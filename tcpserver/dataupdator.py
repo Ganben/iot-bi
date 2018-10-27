@@ -28,6 +28,7 @@ import time
 import threading
 import queue
 import asyncio
+import unittest
 
 import redis
 import pygtrie
@@ -59,36 +60,12 @@ db = mysql.connector.connect(
     charset = 'utf8mb4'
 )
 
+
 # rd = redis.StrictRedis(host='127.0.0.1', port=6379, db=0)
 rpool = redis.ConnectionPool(host='localhost', port=6379, db=0)
 rd = redis.Redis(connection_pool=rpool)
 
 # a multithread to scheduled job every some time;
-class Timedjob:
-    def __init__(self, inte):
-        self.interval = inte
-        self.last = datetime.datetime.now()
-    
-    def doit(self, datatable):
-        if datetime.datetime.now() - self.last < self.interval:
-            return
-        else:
-            self.last = datetime.datetime.now()
-            self.update(datatable)
-    
-    def update(self, datatable):
-        pass
-        # TODO:do some query
-
-# a multithreader
-class DaemonThreader:
-    def execute(self):
-        pass
-        # loop forever
-        # wake every 1/4 minimun interval and do all job
-        
-    def addajob(self, job):
-        pass
 
 class WorkerThread(threading.Thread):
     """
@@ -98,6 +75,7 @@ class WorkerThread(threading.Thread):
         super(WorkerThread, self).__init__()
         self.iq = iq
         self.oq = oq
+        logger.debug('thread start')
         self.stoprequest = threading.Event()
     
     def run(self):
@@ -107,11 +85,11 @@ class WorkerThread(threading.Thread):
             try:
                 # blocking get with time out 0.05s
                 t = 3600*24
-                
+                logger.debug('--thread run--')
                 # time.sleep(t)
                 job_in = self.iq.get(True, 0.05)
-                if datetime.datetime.today() - job_in >= datetime.timedelta(minutes=10):
-                    
+                if datetime.datetime.today() - job_in >= datetime.timedelta(hours=24):
+                    logger.debug('--time compare ok --')
                     job_out = self.process(job_in)
                     
                     self.iq.put(datetime.datetime.today())
@@ -122,74 +100,145 @@ class WorkerThread(threading.Thread):
                 else:
                     # put back it to queue
                     self.iq.put(job_in)
-                    time.sleep(3600)
+                    t = 3600*4 # interval: 4h
+                    logger.debug('thread wait for %ss' % t)
+                    time.sleep(t)
                 
             except queue.Empty:
+                logger.info('--thread queue empty exception--')
                 continue
     def process(self, job_in):
         # do nothing
         # TODO: update live data to sql
         # TODO: clear existing trie and refresh redis
-
-
-
-
-
+        logger.debug('--process job in at:%s--' % job_in)
+        devices = load_rd_devices()
+        shops = load_rd_shop()
+        for e in devices:
+            generate_dev_daily(e)
+        for e in shops:
+            generate_shop_daily(e)
+        clear_rd_device()
+        clear_rd_shop()
+        logger.debug('--process end with db commit--')
+        # the commit success, pk id is auto added ;
+        db.commit()
         return 1
 # data structure part
 #SQL s from dev.mysql.com/doc/connector-python/en/connector-python-example-cursor-transaction.html
 
+QUERY_DEVICE_BY_ID = (
+    "SELECT id, visited, status, shop_id, activated from stats_device "
+    "WHERE id = %s "
+)
+
+QUERY_SHOP_BY_ID = (
+    "SELECT id, name, units, counts FROM stats_shop "
+    "WHERE id = %s "
+)
+
 INSERT_DEVICEDAILY = ("INSERT INTO stats_devicedaily "
                     "(date, sums, pin1, pin2, pin3, pin4, device_id)"
-                    "VALUES (%s, %s, %d, %d, %d, %d, %d, %d)")
+                    "VALUES (%s, %s, %s, %s, %s, %s, %s)")
 
 DEVICE_DATA = ()
 
+INSERT_SHOPDAILY = (
+    "INSERT INTO stats_shopdaily "
+    "(date, sums, shop_id)"
+    "VALUES (%s, %s, %s)"
+)
 
-# 1. active device data
-class ActiveDevice:
-    def __init__(self):
-        self.active_length = 0
-        self.device = {}  # k:device v: [total, pin1, pin2, pin3, pin4]
-        #
+SHOP_DATA = ()
 
-# data manipulator class
-class ActiveManager(object):
-    def __init__(self):
-        self.active_device = ActiveDevice()
-        # load from redis if exist
+def load_rd_devices():
+    # load redis trie data
+    # return list of devices
+    res = []
+    rkey = 'livedevicechart'
+    o = pickle.loads(rd.get(rkey))
+    d = datetime.date.today()
+    for k, v in o.items():
+        # get all
+        if v['sum'] > -1:
+            res.append(
+                (
+                    d, 
+                    v['sum'],
+                    v['stats'][0],
+                    v['stats'][1],
+                    v['stats'][2],
+                    v['stats'][3],
+                    v['label']
+                )
+            )
+            # the format is for INSERT SQL sentences
+    return res
 
-    def feed(self, registration):
-        pass # parse hex to registrated device, numbers
+def load_rd_shop():
+    # load redis trie data
+    # return list of shops
+    res = []
+    rkey = 'liveshopchart'
+    o = pickle.loads(rd.get(rkey))
+    d = datetime.date.today()
+    for k, v in o.items():
+        # get all 
+        res.append((
+            d,
+            v['sum'],
+            v['id']
+        ))
+        # the format is for INSERT SQL sentences
+    return res
 
-# 2. device-pin total data
-class IndexLive:
-    def __init__(self):
-        self.devices = {}    # k = device v = incremented numbers
-        # load from redis if exist
+def generate_dev_daily(device):
+    # a device dict input
+    # generate the data model
+    # execute insert of the generated data to mysql
+    cursor = db.cursor()
+    logger.debug('--paras len:%s' % len(device))
+    cursor.execute(INSERT_DEVICEDAILY, device)
+    res = cursor.lastrowid
+    cursor.close()
+    logger.debug('sql dev daily insert: %s' % res)
+    return res
 
-# data manipulator class
-class IndexManager(object):
-    def __init__(self):
-        self.indexlive = IndexLive()
-        # load from redis
-    def feed(self, activedevices):
-        pass
+def generate_shop_daily(shop):
+    # a shop dict input
+    # generate the data model
+    # execute insert of the data to mysql
+    cursor = db.cursor()
+    cursor.execute(INSERT_SHOPDAILY, shop)
+    res = cursor.lastrowid
+    cursor.close()
+    logger.debug('sql shop daily insert: %s' % res)
+    return res
 
-# 3. device-shop info map
-class DevShopMap:
-    def __init__(self):
-        self.devices = {}  # k:dev, v:shop
+def clear_rd_device():
+    # clear the redis device data
+    
+    rkey = 'livedevicechart'
+    o = pickle.loads(rd.get(rkey))
+    for k, v in o.items():
+        v['sum'] = 0
+        v['stats'] = [0,0,0,0]
+    rd.set(rkey, pickle.dumps(o))
 
-class DevShopMapManager(object):
-    def __init__(self):
-        self.map = DevShopMap()
-        # load from redis
-        # and save to redis
-    def feed(self, data):
-        pass
-        #to parse device to shop 
+    return 1
 
+def clear_rd_shop():
+    # clear the redis shop data
+    
+    rkey = 'liveshopchart'
+    o = pickle.loads(rd.get(rkey))
+    for k, v in o.items():
+        v['sum'] = 0
+        for i in v['data']:
+            i = 0
+    rd.set(rkey, pickle.dumps(o))
+    
+    return 1
 
 if __name__ == "__main__":
     # start multi threading
@@ -199,5 +248,26 @@ if __name__ == "__main__":
     # for p in pool:
     #     time.sleep(100)
     #     p.start()
+    jobin = datetime.datetime.today()
+    in_queue.put(jobin)
     t = WorkerThread(iq=in_queue, oq=out_queue)
     t.start()
+
+class Test(unittest.TestCase):
+    def test1(self):
+        cursor = db.cursor()
+        cursor.execute(QUERY_DEVICE_BY_ID, (1,))
+        for (id, visited, status, shop_id, activated) in cursor:
+            res = shop_id
+            print('%s' % visited)
+        cursor.close()
+
+        self.assertEqual(res, 1)
+    
+    def test2(self):
+        l1 = load_rd_devices()
+        self.assertEqual(len(l1), 6)
+    
+    def test3(self):
+        l2 = load_rd_shop()
+        self.assertEqual(len(l2), 3)
