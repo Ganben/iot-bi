@@ -9,6 +9,7 @@ import pickle
 import redis
 import pygtrie
 import json
+import datetime
 
 from stats import models
 
@@ -40,8 +41,11 @@ class ShopDetail(View):
     def get(self, request, shopid =1):
         # retrieve model
         qs = self.model.objects.filter(shop__id=shopid)[0]
+        qshop = models.Shop.objects.filter(pk=shopid)[0]
         # query (inverse) related device
-        qd = models.DeviceDataLive.objects.filter(shop__id=qs.id)
+        # qd = models.DeviceDataLive.objects.filter(shop__id=qs.id)
+        qd = models.Device.objects.filter(shop__id=shopid)[0:20]
+        # qdevs = 
         ctx = context_gen(request)
         ctx['shopmq'] = 'shop%s' % shopid
         if request.session.get('ssid', False):
@@ -51,21 +55,27 @@ class ShopDetail(View):
             request.session['ssid'] = str(ssid)
         ctx['shopid'] = shopid
         ctx['sessionid'] = str(ssid)
+        ctx['shopname'] = qshop.name
+        ctx['date'] = datetime.date.today()
         # following data is from redis live
         ro = pickle.loads(rd.get('liveshopchart'))
+        sh = ro[str(shopid)]
         ctx['chartdata'] = {
-            
+            'labels': ["%s" % i for i in sh['labels']],
+            'data':sh['data'],
+            'sum': sh['sum']
         }
-
+        
         # following data is from mysql history
-        ctx['charttable'] = {
-            'labels': ["%s" % d.device.id for d in list(qd)],
-            # 'datasets': [{
-            #     'label': "visits",
-                'data': [d.visited for d in list(qd)]
-                # 'borderWidth': 1
-            # }]
-        }
+        ctx['charttable'] = list(qd)
+        # {
+        #     'labels': ["%s" % d.device.id for d in list(qd)],
+        #     # 'datasets': [{
+        #     #     'label': "visits",
+        #         'data': [d.visited for d in list(qd)]
+        #         # 'borderWidth': 1
+        #     # }]
+        # }
 
         return render(request, self.template_name, context=ctx)
 

@@ -4,11 +4,19 @@
     <div class="row h-600">
         <div class="chart-container" style="position: relative; height:40vh; width:80vw">
                 <h4 class="mt-5">Device Live Stats</h4>
-                of ShopName, current datetime
+                of {{shopname}}, on {{date}}
                 <canvas id="shopchart" width="800" height="600"></canvas>
             </div>
         </div>
-
+<div class = "row">
+    {% if charttable %}
+    <ul class="list-group">
+        {% for el in charttable %}
+        <a href="/shop/dev/{{el.id}}" class="list-group-item list-group-item-action">Device #{{el.id}} {% if el.activated %}Activated{% else %}Disabled{%endif%}, with {{el.visited}} visits.</a>
+        {% endfor %}
+      </ul>
+    {% endif %}
+</div>
 
 </div>
 <div class="fixed-bottom" id="messages"></div>
@@ -18,9 +26,10 @@
     var mqtopic = "{{shopmq}}";
     var shopid = "{{shopid}}";
     var sessionid = "{{sessionid}}";
+
 {% autoescape off%}
-    var ctx = document.getElementById("shopchart").getContext('2d');
     var data = {{chartdata}};
+    var ctx = document.getElementById("shopchart").getContext('2d');
     //need generate the next level state, preserve empty state;
     //and generate colors array and border color array; in js
     var starttime = this.window.Date.now() / 1000;
