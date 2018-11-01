@@ -1,10 +1,12 @@
 {% extends "base.html" %}
+{% block pgcss %}
+.table {
+  martin-top: ($spacer * 2) !important;
+  padding-top: ($spacer * .5) !important;
+}
+{%endblock%}
 {% block content %}
-<div class="container">
-    <div class="row">
-      <div class="col">
-      </div>
-      <div class="col-6">
+ <h1 class="mt-3"> Device: {{label}} has {{sum}} accesses today; </h1>
             <table class="table">
                     <thead>
                       <tr>
@@ -27,12 +29,9 @@
 
                     </tbody>
                   </table>
-      Device: {{label}} has {{sum}} accesses today;
+                  Device: {{label}} has {{sum}} accesses today; 
 
-      </div>
-      <div class="col">
-      </div>
-    </div>
+
 {% endblock %}
 
 {% block script %}

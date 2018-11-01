@@ -1,25 +1,43 @@
 {% extends "base.html" %}
+{% block pgcss %}
+body {
+    padding: 16px;
+}
+canvas {
+    padding: 5px;
+}
+.chart-container {
+    position: relative;
+    margin: auto;
+    height: 80vh;
+    width: 80vw;
+}
+
+{% endblock %}
 {% block content %}
 <div class="col-lg-2">
     <div class="row h-600">
         <div class="chart-container" style="position: relative; height:40vh; width:80vw">
                 <h4 class="mt-5">Device Live Stats</h4>
                 of {{shopname}}, on {{date}}
-                <canvas id="shopchart" width="800" height="600"></canvas>
+                <canvas id="shopchart" width="800" height="800"></canvas>
+                <div class = "row-md-6 col-md-offset-3 align-items-center">
+                    {% if charttable %}
+                    <ul class="list-group">
+                        {% for el in charttable %}
+                        <a href="/shop/dev/{{el.id}}" class="list-group-item list-group-item-action">Device #{{el.id}} {% if el.activated %}Activated{% else %}Disabled{%endif%}, total {{el.visited}} visits.</a>
+                        {% endfor %}
+                      </ul>
+                    {% endif %}
+                </div>
+                <div class="row-md-6 fixed-bottom" id="messages"></div>
             </div>
         </div>
-<div class = "row">
-    {% if charttable %}
-    <ul class="list-group">
-        {% for el in charttable %}
-        <a href="/shop/dev/{{el.id}}" class="list-group-item list-group-item-action">Device #{{el.id}} {% if el.activated %}Activated{% else %}Disabled{%endif%}, with {{el.visited}} visits.</a>
-        {% endfor %}
-      </ul>
-    {% endif %}
-</div>
+        <div class = "v100"></div>
+
 
 </div>
-<div class="fixed-bottom" id="messages"></div>
+
 {% endblock %}
 {% block script %}
     {% comment %} var topic = {{}} {% endcomment %}
@@ -35,7 +53,7 @@
     var starttime = this.window.Date.now() / 1000;
     let colorarray = function(datalist) {
         var result = [];
-        var sequence = ["red", "blue", "yellow", "green"];
+        var sequence = ["cyan", "blue", "orange", "green"];
         var i = 0;
         var f = 0;
         for (var prop in datalist) {
@@ -52,11 +70,11 @@
 
     
     var shopChart = new Chart(ctx, {
-        type: 'doughnut',
+        type: 'bar',
         data: {
             labels: data.labels,
             datasets: [{
-                label: "# of Visits",
+                label: "# of Visits Today",
                 data: data.data,
                 backgroundColor: colorarray(data.data),
                 borderColor: colorarray(data.data),
@@ -64,6 +82,7 @@
             }]
         },
         options: {
+            maintainAspectRatio: false,
             legend: {
                 display: true,
                 position: 'bottom'
@@ -126,7 +145,7 @@
       jmessages = JSON.parse(message.payloadString);
       //will be a list;
       deltatime = window.Date.now() / 1000 - starttime;
-      $('#messages').append('<p>+'+deltatime.toFixed(3)+'s:' +jmessages[0] + ' <span>!</span></p>');
+      $('#messages').append('<p>+'+deltatime.toFixed(3)+'s: device' +jmessages[0]["label"] + ' is <span>active !</span></p>');
       //data update
       c = 0;
 

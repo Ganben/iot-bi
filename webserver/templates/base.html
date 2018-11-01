@@ -8,12 +8,15 @@
 
 <!-- Bootstrap CSS -->
 <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.2/css/bootstrap.min.css" integrity="sha384-Smlep5jCw/wG7hdkwQ/Z5nLIefveQRIY9nfy6xoR1uRYBtpZgI6339F5dgvm/e9B" crossorigin="anonymous">
-
+<style type="text/css">
+    {% block pgcss %}
+    {% endblock %}
+</style>    
 </head>
 <body>
     <header>
         <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
-            <a class="navbar-brand" href="#">Shop Activity Stats</a>
+            <a class="navbar-brand" href="/shop/">Shop Activity Stats</a>
         </nav>
     </header>
     <main role="main" class="container">
@@ -23,7 +26,7 @@
             <div class="d-flex p-2 bd-highlight">
 
             </div>
-            <div class="col-lg-auto">
+            <div class="v-100">
                 <!-- navbar -->
             </div>
             <div class="col">
@@ -54,8 +57,6 @@
         {% block script %}
         {% endblock %}
     </script>
-    <script languang="php">
-        
-    </script>
+
 </body>
 </html>
