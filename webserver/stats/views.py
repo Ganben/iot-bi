@@ -88,6 +88,7 @@ class DeviceView(View):
         # get redis
         # rkey = 'dev=%s' % device
         rkey = 'livedevicechart'
+
         if rd.exists(rkey):
             # d = rd.get(rkey)
             # load some from binary
@@ -99,7 +100,7 @@ class DeviceView(View):
 
             # generate new
             # save to rd
-
+        qdd = models.DeviceDaily.objects.filter(device__id=device).order_by('date')[0:14]
         # session
         if request.session.get('ssid', False):
             ssid = request.session.get('ssid')
@@ -112,8 +113,26 @@ class DeviceView(View):
         ctx['pinlist'] = gen_dev_pin(d.get(str(device)))
         ctx['label'] = d.get(str(device))['label']
         ctx['sum'] = d.get(str(device))['sum']
-        
+        #ctx['history'] = list(qdd)
+        ctx['chartdata'] = gen_devchartdata(list(qdd))
         return render(request, self.template_name, context=ctx)
+
+def gen_devchartdata(ld):
+    chartdata = {}
+    chartdata['color'] = "red"
+    colors = []
+    labels = []
+    data = []
+    colorarr = ["cyan","blue","yellow","orange","purple"]
+    i = 0
+    for e in ld:
+        labels.append(str(e.date))
+        data.append(e.sums)
+    chartdata['data'] = data
+    chartdata['labels'] = labels
+    return chartdata
+
+
 
 def gen_dev_pin(devlive):
     #gen live dev data
