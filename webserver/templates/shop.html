@@ -145,6 +145,7 @@ canvas {
       jmessages = JSON.parse(message.payloadString);
       //will be a list;
       deltatime = window.Date.now() / 1000 - starttime;
+      $('#messages').empty();
       $('#messages').append('<p>+'+deltatime.toFixed(3)+'s: device' +jmessages[0]["label"] + ' is <span>active !</span></p>');
       //data update
       c = 0;
