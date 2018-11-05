@@ -99,3 +99,4 @@ class DeviceDaily(models.Model):
     pin3 = models.IntegerField(default=0)
     pin4 = models.IntegerField(default=0)
     
+    

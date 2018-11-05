@@ -112,6 +112,7 @@ class WorkerThread(threading.Thread):
         # TODO: update live data to sql
         # TODO: clear existing trie and refresh redis
         logger.debug('--process job in at:%s--' % job_in)
+        db.reconnect()
         devices = load_rd_devices()
         shops = load_rd_shop()
         for e in devices:
