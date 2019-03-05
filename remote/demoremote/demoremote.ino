@@ -1,17 +1,27 @@
 #include <SPI.h>
 #include <PubSubClient.h>
 #include <ESP8266WiFi.h>
+#include <ESP8266WiFiAP.h>
+#include <ESP8266WiFiGeneric.h>
+#include <ESP8266WiFiMulti.h>
+#include <ESP8266WiFiScan.h>
+#include <ESP8266WiFiSTA.h>
+#include <ESP8266WiFiType.h>
+#include <WiFiClient.h>
+#include <WiFiClientSecure.h>
+#include <WiFiServer.h>
+#include <WiFiUdp.h>
 #include "OLED.h"
 #include <Wire.h>
 
 #define RST_OLED 16
 
 const char* WIFISSID = "Xiaomi_8ADD";
-const char* PASS = "Blockhouse";
+const char* PASS = "pass";
 const char* MQSERVER = "192.168.31.122";
 const int MQPORT = 1883;
 int status = WL_IDLE_STATUS ;
-const int MYID = 101;
+//char MYID[48];
 
 OLED display(4, 5);
 WiFiClient wclient;
@@ -23,13 +33,14 @@ int value = 0;
 int cc = 0;
 //test data bytemsg;
 //const char bytemsg[12] = {0x01,0x01,0x01,0x01,0x01,0x00,0x01,0x01,0x02,0x01,0x01,0x01};
-const char* hexmsg = "00000001"; //device id
+uint8_t macarry[6];// = "00000001"; //device id
+char macchar[12];
 //"8fad12f5d9";
 // for buttun/high-low voltage signal
 const int s1Pin = 1;
 const int s2Pin = 13;
 const int s3Pin = 12;
-const int s4Pin = 5;
+const int s4Pin = 3;
 
 int buttonState = 0;
 int prevState = 0;
@@ -62,18 +73,34 @@ void setup() {
   //open serialport
   Serial.begin(9600);
   Serial.println("OLED test!");
+  
   display.begin();
-  display.print("test1", 4);
+  WiFi.macAddress(macarry);
+  for (int i = 0; i < sizeof(macarry); ++i){
+    sprintf(macchar,"%s%02x",macchar,macarry[i]);
+  }
+  
+  display.print(macchar, 3);
   display.print("Init success", 1);
   delay(1000);
   display.print("Wifi init...", 1);
-  WiFi.begin(WIFISSID, PASS);
+  
+  WiFi.mode(WIFI_STA);
+  WiFi.disconnect();
+  delay(100);
+  int n = WiFi.scanNetworks();
+  
+  Serial.print("scanned: \n");
+  Serial.print(n);
+  Serial.print(" wifis \n");
 
+  WiFi.begin(WIFISSID, PASS);
+  
   while (WiFi.status() != WL_CONNECTED) {
     delay(10000);
-    Serial.print("wifi init...\n");
-    display.print("Wifi con..", 1);
-//    WiFi.begin(WIFISSID, PASS);
+//    Serial.print(macchar);
+    display.print("Wifi recon..", 1);
+    WiFi.begin(WIFISSID, PASS);
   }
 //  myip = WiFi.localIP();
   Serial.println(WiFi.localIP());
@@ -157,7 +184,7 @@ void reconnect() {
     if (mclient.connect("ESP8266Client")) {
       Serial.println("connected\n");
       // Once connected, publish an announcement...
-      mclient.publish("remote", hexmsg);
+      mclient.publish("remote", macchar);
       //snprintf(msg, 75, "%s.%s", signalvalue[0], signalvalue[1], signalvalue[2], signalvalue[3]);
       // ... and resubscribe
       //mclient.subscribe("remote");
@@ -239,7 +266,7 @@ void loop() {
       ++accumulate;
       Serial.print(cc);
       Serial.print("th signals --------------\n");
-      snprintf(msg, 75, "%s.%d", hexmsg, cc);
+      snprintf(msg, 75, "%s.%d", macchar, cc);
       //lastMsg = now; //think about reduce this losing risk;
       mclient.publish("dev", msg);
       snprintf(msg, 75, "si=%d", cc);
@@ -256,7 +283,7 @@ void loop() {
     ++value;
     // kw=hb, str=device_id, ld=time_stamp, str=status 1111
     snprintf(sigState, 32, "%d%d%d%d", signalvalue[0], signalvalue[1], signalvalue[2], signalvalue[3]);
-    snprintf (msg, 75, "hb.%s.%ld.%s", hexmsg, value, sigState);
+    snprintf (msg, 75, "hb.%s.%ld.%s", macchar, value, sigState);
     Serial.print("heartbeat:");
     Serial.println(msg);
 //    if (value % 3 == 0) {

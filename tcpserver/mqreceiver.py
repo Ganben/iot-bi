@@ -220,7 +220,7 @@ def query_device(dvid, count=1):
     return id, visited, device_id, shop_id
 
 def generate_chart_data(device_id):
-    # body is a json fied
+    # body is a json fied # TODO: pin_id -> shop number
     shop_id = deltaChange.map_store.get(device_id)
     amount = deltaChange.dev_store.get(device_id)
     # FD required shop visits update:
@@ -258,8 +258,9 @@ def on_message(client, userdata, msg):
             return
         
         try:
-            device_id = int(dev_str[0], 16) #parse hex to int
+            device_id = dev_str[0] #int(dev_str[0], 16) #parse hex to int
             device_pin = int(dev_str[1])
+            pin_id = "%s%d" % (device_id, device_pin)
         except:
             logger.error('wrong device id format')
             return
@@ -272,7 +273,7 @@ def on_message(client, userdata, msg):
             logger.info('put shop %s' % shopid)
             deltaChange.put_shop(shopid, 1)
             deltaChange.update(device_id)
-            body = generate_chart_data(device_id)
+            body = generate_chart_data(device_id) # TODO
 
         try:
             client.publish("shop%s" % shopid, body, qos=2)
@@ -291,7 +292,7 @@ def on_message(client, userdata, msg):
                 logger.debug('remote/hb/device:%s' % int(remote_register[1], 16))
             except:
                 logger.error('hb parse error:%s' % remote_register)
-            device_id = int(remote_register[1], 16)
+            device_id = remote_register[1] #int(remote_register[1], 16)
             time = int(remote_register[2]) # in munite
             live_status = parseSigStatus(remote_register[3]) # TODO: need filter
         elif len(remote_register) == 3 and remote_register[0] == 'wb':
