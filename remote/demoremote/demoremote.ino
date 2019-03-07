@@ -17,7 +17,7 @@
 #define RST_OLED 16
 
 const char* WIFISSID = "Xiaomi_8ADD";
-const char* PASS = "pass";
+const char* PASS = "xxx";
 const char* MQSERVER = "192.168.31.122";
 const int MQPORT = 1883;
 int status = WL_IDLE_STATUS ;
@@ -181,7 +181,7 @@ void reconnect() {
     Serial.print("Attempting MQTT connection...\n");
     display.print("TCP reconn........", 2);
     // Attempt to connect
-    if (mclient.connect("ESP8266Client")) {
+    if (mclient.connect(macchar, "devuser","devpass")) {
       Serial.println("connected\n");
       // Once connected, publish an announcement...
       mclient.publish("remote", macchar);
