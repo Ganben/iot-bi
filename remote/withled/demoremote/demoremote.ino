@@ -16,9 +16,9 @@
 
 #define RST_OLED 16
 
-const char* WIFISSID = "Xiaomi_8ADD";
-const char* PASS = "xxx";
-const char* MQSERVER = "192.168.31.122";
+const char* WIFISSID = "LY1688";
+const char* PASS = "admin85259297";
+const char* MQSERVER = "iot.aishe.org.cn";
 const int MQPORT = 1883;
 int status = WL_IDLE_STATUS ;
 //char MYID[48];
@@ -38,9 +38,9 @@ char macchar[12];
 //"8fad12f5d9";
 // for buttun/high-low voltage signal
 const int s1Pin = 1;
-const int s2Pin = 13;
-const int s3Pin = 12;
-const int s4Pin = 3;
+const int s2Pin = 3;
+const int s3Pin = 13;
+const int s4Pin = 15;
 
 int buttonState = 0;
 int prevState = 0;
