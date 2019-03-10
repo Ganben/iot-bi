@@ -16,6 +16,7 @@ import unittest
 
 import datetime
 import pickle
+import enum
 
 import pygtrie
 
@@ -47,10 +48,71 @@ dsMap = pygtrie.CharTrie()
 sdMap = pygtrie.CharTrie()
 
 ### db part
+class Rdb:
+    def __init__(self):
+        self.rd = rd
+        self.dsMap = dsMap
+        self.sdMap = sdMap
+    
+    def put_heartbeat(self, hb):
+        # put heartbeat to rd
+        pass
+
+    def put_activity(self, action):
+        # put activity to
+        pass
+
+class ProxyState(enum.Enum):
+    Heartbeat = 1
+    Regist = 2
+    Activity = 3
+
+class MsgRemote:
+    def __init__(self, content):
+        self.content = content
+        self.device = parseID(content)
+        self.header = parseHeader(content)
+    
+    def push_to_db(self, db):
+        #
+        pass
+
+class MsgDev:
+    def __init__(self, content):
+        self.content = content
+        self.device = parseID(content)
+        self.state = ProxyState.Activity
+
+class Proxy:
+    def __init__(self, subject):
+        self._subject = subject
+        self._proxystate = subject.state
+
+
+class ProxyMsg(Proxy):
+    def push(self):
+        # push to db/other service depend on its proxy state
+        if self._proxystate == ProxyState.Activity:
+            #
+            pass
 
 
 ### shop chart live part
 
+def parseID(str_content):
+    # parse the str to 
+
+def parseSigStatus(s):
+    if len(s) != 4:
+        return [1,1,1,1]
+    else:
+        r = []
+        for i in s:
+            if i == '1':
+                r.append(1)
+            elif i == '0':
+                r.append(0)
+        return r
 
 ### MQTT part
 
