@@ -19,6 +19,7 @@ import pickle
 import enum
 
 import pygtrie
+from anytree import Node, RenderTree
 
 import redis
 from paho.mqtt import client
@@ -46,6 +47,17 @@ rd = redis.Redis(connection_pool=rpool)
 dsMap = pygtrie.CharTrie()
 
 sdMap = pygtrie.CharTrie()
+#use normal dict for node dict map
+
+# no map required
+# all put to a trie
+# and use anytree to generate all cached stats, use render tree
+
+class DeviceNode(Node):
+    # all device node for status
+    # maybe not required, just iter all dev in cache
+    pass
+    #TODO
 
 ### db part
 class Rdb:
@@ -53,14 +65,25 @@ class Rdb:
         self.rd = rd
         self.dsMap = dsMap
         self.sdMap = sdMap
+        self.devices = {}
     
     def put_heartbeat(self, hb):
         # put heartbeat to rd
-        pass
+        self.rd.rpush('hblist', hb)
 
     def put_activity(self, action):
         # put activity to
-        pass
+        self.rd.rpush('aclist', action)
+    
+    def dayswap(self):
+        # swap cached msgs
+        while self.rd.llen('hblist') > 0:
+            o = self.rd.lpop('hblist')
+            # do something
+
+        while self.rd.llen('aclist') > 0:
+            o = self.rd.lpop('aclist')
+            # do something
 
 class ProxyState(enum.Enum):
     Heartbeat = 1
@@ -98,9 +121,17 @@ class ProxyMsg(Proxy):
 
 
 ### shop chart live part
+def parseDev(str_content):
+    #
+    ss = str_content.split('.')
+    reto = MsgDev(str_content)
+    return 
 
 def parseID(str_content):
-    # parse the str to 
+    # parse the str to
+    ss = str_content.split('.')
+    reto = MsgRemote(str_content)
+    return
 
 def parseSigStatus(s):
     if len(s) != 4:
@@ -127,6 +158,12 @@ def on_message(client, userdata, msg):
     logger.debug("--incomming-msg--")
     logger.info("%s:%s" %(msg.topic, msg.payload))
     # selective with topic, then process payload
+    if msg.topic == 'dev':
+
+        r = parseDev(msg.payload.decode('ascii'))
+    elif msg.topic == 'remote':
+        r = parseID(msg.payload.decode('ascii'))
+
 
 def init():
     pass
