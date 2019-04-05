@@ -6,6 +6,9 @@ __pycache__/
 # C extensions
 *.so
 
+
+flaskweb/
+vuefront/
 # Distribution / packaging
 .Python
 build/

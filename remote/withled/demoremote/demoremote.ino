@@ -253,11 +253,11 @@ void loop() {
     readSignal();
     cc = filter(buttonState);
     Serial.print(cc);
-    delay(80);
+    delay(60);
     
     readSignal();
     cc = filter(buttonState);
-    delay(20);
+    delay(60);
     readSignal();
     cc = filter(buttonState);
     Serial.print(cc);
@@ -271,14 +271,15 @@ void loop() {
       mclient.publish("dev", msg);
       snprintf(msg, 75, "si=%d", cc);
       display.print(msg);
-      delay(300);
+      delay(2000);
+      reset_signal();
     }
     
   }
   }
   long now = millis();
   //interval = 60s
-  if (now - lastMsg > 60000) {
+  if (now - lastMsg > 180000) {
     lastMsg = now;
     ++value;
     // kw=hb, str=device_id, ld=time_stamp, str=status 1111

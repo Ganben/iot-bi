@@ -66,6 +66,8 @@ class Rdb:
         self.dsMap = dsMap
         self.sdMap = sdMap
         self.devices = {}
+        self.actions = {}
+        self.hbs = {}
     
     def put_heartbeat(self, hb):
         # put heartbeat to rd
@@ -75,6 +77,26 @@ class Rdb:
         # put activity to
         self.rd.rpush('aclist', action)
     
+    def add_dev(self, lin):
+        logger.warn('new dev:%s' % lin[0])
+        self.devices[lin[0]] = {
+            "time": 0,
+            "status": [0,0,0,0]
+        }
+    
+    def add_hb(self, lin):
+        self.devices[lin[1]] = {
+            "time": 3*int(lin[2]),
+            "status": parseSigStatus(lin[3])
+        }
+    
+    def add_act(self, lin):
+        if self.actions.get(lin[0]) is None:
+            self.actions[lin[0]] = 1
+        else:
+            self.actions[lin[0]] = self.actions[lin[0]] + 1
+        
+
     def dayswap(self):
         # swap cached msgs
         while self.rd.llen('hblist') > 0:
@@ -84,6 +106,7 @@ class Rdb:
         while self.rd.llen('aclist') > 0:
             o = self.rd.lpop('aclist')
             # do something
+rdb = Rdb()
 
 class ProxyState(enum.Enum):
     Heartbeat = 1
@@ -124,13 +147,13 @@ class ProxyMsg(Proxy):
 def parseDev(str_content):
     #
     ss = str_content.split('.')
-    reto = MsgDev(str_content)
+    # reto = MsgDev(str_content)
     return 
 
 def parseID(str_content):
     # parse the str to
     ss = str_content.split('.')
-    reto = MsgRemote(str_content)
+    # reto = MsgRemote(str_content)
     return
 
 def parseSigStatus(s):
@@ -161,20 +184,35 @@ def on_message(client, userdata, msg):
     if msg.topic == 'dev':
 
         r = parseDev(msg.payload.decode('ascii'))
+    
     elif msg.topic == 'remote':
         r = parseID(msg.payload.decode('ascii'))
-
+        try:
+            b = msg.payload.decode('ascii').split('.')
+            if len(b) == 1:
+            # new registered device
+                rdb.add_dev(b)
+            else:
+                rdb.add_hb(b)
+        except:
+            logger.error('remote parse error')
 
 def init():
     pass
 
+c = client.Client(client_id="watcher")
+c.on_connect = on_connect
+c.on_message = on_message
+c.username_pw_set("guest", "guest")
+# c.ws_set_option(path="/")
+c.connect("127.0.0.1", 1883, 60)
 
 if __name__ == "__main__":
     init()
-    c = client.Client(client_id="receiver")
-    c.on_connect = on_connect
-    c.on_message = on_message
-    c.username_pw_set("guest", "guest")
-    c.ws_set_option(path="/")
-    c.connect("127.0.0.1", 1883, 60)
+    # c = client.Client(client_id="receiver")
+    # c.on_connect = on_connect
+    # c.on_message = on_message
+    # c.username_pw_set("guest", "guest")
+    # c.ws_set_option(path="/")
+    # c.connect("127.0.0.1", 1883, 60)
     c.loop_forever()

@@ -256,7 +256,7 @@ void loop() {
   }
   long now = millis();
   //interval = 60s
-  if (now - lastMsg > 60000) {
+  if (now - lastMsg > 180000) {
     lastMsg = now;
     ++value;
     // kw=hb, str=device_id, ld=time_stamp, str=status 1111
