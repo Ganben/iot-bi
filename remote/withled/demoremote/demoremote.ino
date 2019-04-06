@@ -168,6 +168,10 @@ int signalcompare(){
   return -9;
 }
 
+int reset_signal() {
+  
+}
+
 void readSignal(){
     signalvalue[0] = digitalRead(s1Pin);
     signalvalue[1] = digitalRead(s2Pin);

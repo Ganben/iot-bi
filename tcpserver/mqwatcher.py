@@ -23,14 +23,14 @@ from anytree import Node, RenderTree
 
 import redis
 from paho.mqtt import client
-import mysql.connector 
+# import mysql.connector
 
 ### set up logging
 logger = logging.getLogger('mqwatcher')
 logger.setLevel(logging.DEBUG)
 
 # fh
-fh = logging.FileHandler('mqwathcer.log')
+fh = logging.FileHandler('mqwatcher.log')
 fh.setLevel(logging.DEBUG)
 # ch
 ch = logging.StreamHandler()
@@ -68,6 +68,9 @@ class Rdb:
         self.devices = {}
         self.actions = {}
         self.hbs = {}
+        if self.rd.get('date') is None:
+            self.date = datetime.datetime.today()
+
     
     def put_heartbeat(self, hb):
         # put heartbeat to rd
@@ -89,13 +92,20 @@ class Rdb:
             "time": 3*int(lin[2]),
             "status": parseSigStatus(lin[3])
         }
+        if datetime.datetime.today() - self.date >= datetime.timedelta(days=1):
+            self.dayswap()
+            self.reset()
+            self.date = self.date + datetime.timedelta(days=1)
     
     def add_act(self, lin):
         if self.actions.get(lin[0]) is None:
-            self.actions[lin[0]] = 1
+            self.actions[lin[0]] = [0,0,0,0]
+            self.actions[lin[0]][lin[1]-1] = 1
         else:
-            self.actions[lin[0]] = self.actions[lin[0]] + 1
-        
+            stats = self.actions[lin[0]]
+            # stats[0] = stats[0] + 1
+            stats[lin[1]-1] = stats[lin[1]-1] + 1
+
 
     def dayswap(self):
         # swap cached msgs
@@ -106,6 +116,35 @@ class Rdb:
         while self.rd.llen('aclist') > 0:
             o = self.rd.lpop('aclist')
             # do something
+        for key, _ in self.devices.items():
+            # for i in range(4):
+            self.rd.rpush('deviceslist', key)
+
+        for key, value in self.actions.items():
+            for i in range(len(value)):
+                # put key+index to rd
+                k = '%s%s' % (key, i)
+                self.rd.set(k, value[i])
+    
+    def reset(self):
+        self.devcies.clear()
+        self.actions.clear()
+        # self.rd.delete('deviceslist')
+
+        
+    def query_status(self, pin):
+        # query id+pin
+        if self.devices.get(pin) is None:
+            return [0, 0, 0, 0]
+        else:
+            return self.devices.get(pin)
+    
+    def query_actions(self, pin):
+        if self.actions.get(pin) is None:
+            return [-1, -1, -1, -1]
+        else:
+            return self.actions.get(pin)
+
 rdb = Rdb()
 
 class ProxyState(enum.Enum):
