@@ -82,6 +82,15 @@ class PinStats:
         try:
             o = self.sql_execute(script)
         return o
+    
+    def get_history(self, devicepin):
+        # one device pin/4 a tuple
+        # return days with counts
+        query = ("SELECT date, devicepin, count FROM devicepinstats "
+        "WHERE devicepin = %s AND date BETWEEN %s AND %s" % ())
+        try:
+            o = self.sql_execute(query)
+        return o
 
     def sql_init(self):
         def create_database(cursor):
