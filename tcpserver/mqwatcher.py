@@ -69,7 +69,13 @@ class Rdb:
         self.actions = {}
         self.hbs = {}
         if self.rd.get('date') is None:
-            self.date = datetime.datetime.today()
+            d = datetime.datetime.now().date()
+            self.rd.set('date', d)
+            self.date = d
+        else:
+            ds = self.rd.get('date').decode('ascii')
+            dsl = ds.split('-')
+            self.date = datetime.datetime(dsl[0], dsl[1], dsl[2])
         # if self.rd.llen('hblist') > 0:
         # TODO: add cached reload
         while self.rd.llen('hblist') > 0:

@@ -8,6 +8,8 @@
 #statistical view
 import logging
 import datetime
+import threading
+import time
 
 import mysql.connector
 from mysql.connector import errorcode
@@ -198,8 +200,32 @@ def dayswap():
             #TODO
             o = sdb.save_devicecount(k, counts)
 
-
+class WorkerThread(threading.Thread):
+    """
+    worker thread
+    """
+    def __init__(self, date):
+        super(WorkerThread, self).__init__()
+        self.date = date
     
+    def run(self):
+        while not self.stoprequest.isSet():
+            try:
+                if datetime.datetime.now().date() - self.date >= datetime.timedelta(days=1):
+                    dayswap()
+                else:
+                    time.sleep(3600)
 
+if __name__ == "__main__":
+    if rd.get('date') is None:
+        d = datetime.datetime.now().date()
+        rd.set('date', d)
+    else:
+        ds = rd.get('date').decode('ascii')
+        dsl = ds.split('-')
+        d = datetime.datetime(dsl[0], dsl[1], dsl[2])
+    t = WorkerThread(date=d)
+    t.start()
+    
 
 
