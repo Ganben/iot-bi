@@ -70,6 +70,13 @@ class Rdb:
         self.hbs = {}
         if self.rd.get('date') is None:
             self.date = datetime.datetime.today()
+        # if self.rd.llen('hblist') > 0:
+        # TODO: add cached reload
+        while self.rd.llen('hblist') > 0:
+            pass
+        
+        while self.rd.llen('aclist') > 0:
+            pass
 
     
     def put_heartbeat(self, hb):
@@ -109,18 +116,19 @@ class Rdb:
 
     def dayswap(self):
         # swap cached msgs
-        while self.rd.llen('hblist') > 0:
-            o = self.rd.lpop('hblist')
+        if self.rd.llen('hblist') > 0:
+            o = self.rd.delete('hblist')
             # do something
 
-        while self.rd.llen('aclist') > 0:
-            o = self.rd.lpop('aclist')
+        if self.rd.llen('aclist') > 0:
+            o = self.rd.delete('aclist')
             # do something
         for key, _ in self.devices.items():
             # for i in range(4):
             self.rd.rpush('deviceslist', key)
 
         for key, value in self.actions.items():
+            self.rd.rpush('actionlist', key)
             for i in range(len(value)):
                 # put key+index to rd
                 k = '%s%s' % (key, i)

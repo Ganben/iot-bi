@@ -66,30 +66,39 @@ TABLES['devicepinstats'] = (
 
 #
 
-class PinStats:
+class DBPinstats:
     def __init__(self):
         # add sql conn
         # self.db = sqldb
-        pass
+        self.sql_init()
+        self.sql_init_table()
+        self.sql_close()
+
     def save_devicecount(self, devicepin, count):
         #
-        pass
+        # date : date
+        # devicepin: hexstr
+        # count: int
         script = (
             "INSERT INTO devicepinstats "
             "(date, devicepin, count)  "
-            "VALUES (%s, %s, %s)" % (int(devicepin, 16), count))
-                  
+            "VALUES (%s, %s, %s)")
+        d = datetime.datetime.now().date()
+        args = (d, int(devicepin, 16), count)          
         try:
-            o = self.sql_execute(script)
+            o = self.sql_execute(script, args)
         return o
     
     def get_history(self, devicepin):
         # one device pin/4 a tuple
         # return days with counts
         query = ("SELECT date, devicepin, count FROM devicepinstats "
-        "WHERE devicepin = %s AND date BETWEEN %s AND %s" % ())
+        "WHERE devicepin = %s AND date BETWEEN %s AND %s")
+        d_end = datetime.datetime.now().date()
+        d_start = datetime.datetime.now().date() - datetime.timedelta(days=7)
+        args = (int(devicepin, 16), d_start, d_end)
         try:
-            o = self.sql_execute(query)
+            o = self.sql_execute(query, args)
         return o
 
     def sql_init(self):
@@ -154,7 +163,7 @@ class PinStats:
         if self.cnx is not None:
             self.cnx.close()
     
-    def sql_execute(self, command):
+    def sql_execute(self, command, values):
         # 
         if self.cnx is None:
             return
@@ -162,7 +171,7 @@ class PinStats:
             cursor = self.cnx.cursor()
         
         try:
-            cursor.execute(command)
+            cursor.execute(command, values)
         except mysql.connector.Error as err:
             logger.error(err.msg)
             cursor.close()
@@ -171,11 +180,15 @@ class PinStats:
             cursor.close()
             return True
 
+sdb = DBPinstats()
+# sdb.sql_init()
+
 def dayswap():
     # retrieve data from redis
     # then save it to sql
-    while rd.llen('deviceslist') > 0:
-        el = rd.lpop('deviceslist').decode('ascii')
+    sdb.sql_init()
+    while rd.llen('actionlist') > 0:
+        el = rd.lpop('actionlist').decode('ascii')
         # loop 4 pins
         for i in range(4):
             k = '%s%s' % (el, i)
@@ -183,3 +196,10 @@ def dayswap():
             rd.delete(k)
             # save it to sql
             #TODO
+            o = sdb.save_devicecount(k, counts)
+
+
+    
+
+
+
