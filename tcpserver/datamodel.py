@@ -75,6 +75,7 @@ class DBPinstats:
         self.sql_init()
         self.sql_init_table()
         self.sql_close()
+        # recon before use cnx/cursor
 
     def save_devicecount(self, devicepin, count):
         #
@@ -159,8 +160,16 @@ class DBPinstats:
                 logger.info('table OK')
         
         cursor.close()
-
-
+    
+    def sql_conn(self):
+        if self.cnx is None:
+            cnx = mysql.connector.connect(user='root',
+            database='iotbi',
+            password='123456',
+            host='localhost'
+            )
+            self.cnx = cnx
+        
     def sql_close(self):
         if self.cnx is not None:
             self.cnx.close()
@@ -188,7 +197,7 @@ sdb = DBPinstats()
 def dayswap():
     # retrieve data from redis
     # then save it to sql
-    sdb.sql_init()
+    sdb.sql_conn()
     while rd.llen('actionlist') > 0:
         el = rd.lpop('actionlist').decode('ascii')
         # loop 4 pins
@@ -199,6 +208,7 @@ def dayswap():
             # save it to sql
             #TODO
             o = sdb.save_devicecount(k, counts)
+    sdb.sql_close()
 
 class WorkerThread(threading.Thread):
     """

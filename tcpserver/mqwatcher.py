@@ -14,6 +14,7 @@ import json
 import logging
 import unittest
 
+import time
 import datetime
 import pickle
 import enum
@@ -75,7 +76,8 @@ class Rdb:
         else:
             ds = self.rd.get('date').decode('ascii')
             dsl = ds.split('-')
-            self.date = datetime.datetime(dsl[0], dsl[1], dsl[2])
+            logger.debug('load time:%s' % ds)
+            self.date = datetime.datetime(int(dsl[0]), int(dsl[1]), int(dsl[2]))
         # if self.rd.llen('hblist') > 0:
         # TODO: add cached reload
         while self.rd.llen('hblist') > 0:
@@ -101,16 +103,20 @@ class Rdb:
         }
     
     def add_hb(self, lin):
+        logger.debug('add hb:%s.%s.%s.%s' % (lin[0],lin[1],lin[2],lin[3]))
         self.devices[lin[1]] = {
             "time": 3*int(lin[2]),
             "status": parseSigStatus(lin[3])
         }
+        # self.
         if datetime.datetime.today() - self.date >= datetime.timedelta(days=1):
             self.dayswap()
             self.reset()
             self.date = self.date + datetime.timedelta(days=1)
     
     def add_act(self, lin):
+        #
+        #
         if self.actions.get(lin[0]) is None:
             self.actions[lin[0]] = [0,0,0,0]
             self.actions[lin[0]][lin[1]-1] = 1
@@ -118,7 +124,13 @@ class Rdb:
             stats = self.actions[lin[0]]
             # stats[0] = stats[0] + 1
             stats[lin[1]-1] = stats[lin[1]-1] + 1
-
+        t = time.strftime('%H:%M:%S', time.localtime())
+        action_item = json.dumps({
+            "time": t,
+            "devicepin": "%s%s" % (lin[0],lin[1]),
+            "counts": stats[lin[1]-1]
+        })
+        self.rd.rpush('aclist', action_item)
 
     def dayswap(self):
         # swap cached msgs
@@ -237,7 +249,8 @@ def on_message(client, userdata, msg):
     if msg.topic == 'dev':
 
         r = parseDev(msg.payload.decode('ascii'))
-    
+        rdb.add_act(r)
+        
     elif msg.topic == 'remote':
         r = parseID(msg.payload.decode('ascii'))
         try:
