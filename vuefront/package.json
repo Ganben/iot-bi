@@ -13,9 +13,11 @@
   "dependencies": {
     "axios": "^0.18.0",
     "bootstrap": "^4.3.1",
+    "echarts": "^4.2.1",
     "lottie-web": "^5.5.0",
     "paho-mqtt": "^1.1.0",
     "vue": "^2.5.2",
+    "vue-echarts": "^4.0.1",
     "vue-lottie": "^0.2.1",
     "vue-material": "^1.0.0-beta-10.2",
     "vue-mqtt": "^2.0.3",

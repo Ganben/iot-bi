@@ -1,7 +1,7 @@
 <template>
 <div id="VueLot">
-    <lottie :options="defaultOptions" :height="300" :width="300" v-on:animCreated="handleAnimation"/>
-
+    <lottie :options="defaultOptions" :height="300" :width="300" 
+    v-on:animCreated="handleAnimation"/>
 </div>
 </template>
 <script>

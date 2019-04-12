@@ -1,9 +1,14 @@
 <template>
-  <div>
-    <p>{{ msg }}</p>
+<div>
+    <div class="separator">
+      <md-badge :md-content="count">
+        <md-button class="md-icon-button">
+          <md-icon>{{ msg }}</md-icon>
+        </md-button>
+      </md-badge>
+    </div>
     <lot></lot>
-  </div>
-  
+</div>
 </template>
 
 <script>
@@ -14,7 +19,8 @@ export default {
   name: 'Homepg',
   data() {
     return {
-      msg: 'Hello!',
+      msg: 'H',
+      count: 12,
     };
   },
   methods: {
