@@ -8,7 +8,7 @@ __pycache__/
 
 
 flaskweb/
-vuefront/
+# vuefront/
 # Distribution / packaging
 .Python
 build/
