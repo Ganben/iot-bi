@@ -23,13 +23,14 @@ const int MQPORT = 1883;
 int status = WL_IDLE_STATUS ;
 //char MYID[48];
 
-OLED display(4, 5);
+// OLED display(4, 5);
 WiFiClient wclient;
 PubSubClient mclient(wclient);
 long lastMsg = 0;
 char msg[50];
 char bmsg[32];
 int value = 0;
+//int nonce = 0;
 int cc = 0;
 //test data bytemsg;
 //const char bytemsg[12] = {0x01,0x01,0x01,0x01,0x01,0x00,0x01,0x01,0x02,0x01,0x01,0x01};
@@ -65,25 +66,25 @@ void setup() {
     ;
   }
   //check for shield
-  pinMode(RST_OLED, OUTPUT);
-  digitalWrite(RST_OLED, LOW);   // turn D2 low to reset OLED
+//  pinMode(RST_OLED, OUTPUT);
+//  digitalWrite(RST_OLED, LOW);   // turn D2 low to reset OLED
   delay(50);
-  digitalWrite(RST_OLED, HIGH);    // while OLED is running, must set D2 in high
+//  digitalWrite(RST_OLED, HIGH);    // while OLED is running, must set D2 in high
 
   //open serialport
   Serial.begin(9600);
   Serial.println("OLED test!");
   
-  display.begin();
+//  display.begin();
   WiFi.macAddress(macarry);
   for (int i = 0; i < sizeof(macarry); ++i){
     sprintf(macchar,"%s%02x",macchar,macarry[i]);
   }
   
-  display.print(macchar, 3);
-  display.print("Init success", 1);
+//  display.print(macchar, 3);
+//  display.print("Init success", 1);
   delay(1000);
-  display.print("Wifi init...", 1);
+//  display.print("Wifi init...", 1);
   
   WiFi.mode(WIFI_STA);
   WiFi.disconnect();
@@ -99,20 +100,20 @@ void setup() {
   while (WiFi.status() != WL_CONNECTED) {
     delay(10000);
 //    Serial.print(macchar);
-    display.print("Wifi recon..", 1);
+    // display.print("Wifi recon..", 1);
     WiFi.begin(WIFISSID, PASS);
   }
 //  myip = WiFi.localIP();
   Serial.println(WiFi.localIP());
-  display.print("WiFi connected.", 1);
+  // display.print("WiFi connected.", 1);
 //  display.print((char)WiFi.localIP(), 3);
   delay(500);
   // con mqtt
 //  display.clear
-  display.print("TCP init...", 2);
+  // display.print("TCP init...", 2);
   mclient.setServer(MQSERVER,MQPORT);
   
-  mclient.setCallback(callback);
+//  mclient.setCallback(callback);
 }
 
 void callback(char* topic, byte* payload, unsigned int length) {
@@ -123,7 +124,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
   for (int i = 0; i < length; i++) {
     Serial.print((char)payload[i]);
   }
-  display.print("TCP recv...", 3);
+  // display.print("TCP recv...", 3);
   Serial.println();
 
 }
@@ -183,7 +184,7 @@ void reconnect() {
   // Loop until we're reconnected
   while (!mclient.connected()) {
     Serial.print("Attempting MQTT connection...\n");
-    display.print("TCP reconn........", 2);
+    // display.print("TCP reconn........", 2);
     // Attempt to connect
     if (mclient.connect(macchar, "devuser","devpass")) {
       Serial.println("connected\n");
@@ -192,7 +193,7 @@ void reconnect() {
       //snprintf(msg, 75, "%s.%s", signalvalue[0], signalvalue[1], signalvalue[2], signalvalue[3]);
       // ... and resubscribe
       //mclient.subscribe("remote");
-      display.print("TCP connected", 2);
+      // display.print("TCP connected", 2);
     } else {
       Serial.print("failed, rc=");
       Serial.print(mclient.state());
@@ -218,7 +219,7 @@ void loop() {
   buttonState = signalcompare();
   snprintf(msg, 75, "%d%d%d%d", signalvalue[0], signalvalue[1], signalvalue[2], signalvalue[3]);
 //  Serial.printf(msg);
-  display.print(msg);
+  // display.print(msg);
   // modification detection;
     //snprintf(msg, 75, "%d%d%d%d\n", signalvalue[0], signalvalue[1], signalvalue[2], signalvalue[3]);
     //Serial.printf(msg);
@@ -226,7 +227,7 @@ void loop() {
   if (buttonState < 0) {
     ;
   } else {
-    display.print("***");
+    // display.print("***");
     Serial.print(buttonState);
     prevState = buttonState;
     //snprintf (msg, 75, "state change %s", buttonState); 
@@ -236,19 +237,19 @@ void loop() {
     //delay(1);
     snprintf(msg, 75, "%d%d%d%d\n", signalvalue[0], signalvalue[1], signalvalue[2], signalvalue[3]);
     Serial.printf(msg);
-    display.print(msg);
+    // display.print(msg);
   // listen on button state
   if (buttonState < 0) {
     //turn LED on;
 //    Serial.print("button high");
 //    digitalWrite(ledPin, HIGH);
-    display.print("----");
+    // display.print("----");
     delay(5);
     Serial.print("bs<0");
   } else {
     //turn LED off;
 //    digitalWrite(ledPin, LOW);
-    display.print("b=H..--");
+    // display.print("b=H..--");
     Serial.print(buttonState);
     readSignal();
     delay(20);
@@ -270,11 +271,11 @@ void loop() {
       ++accumulate;
       Serial.print(cc);
       Serial.print("th signals --------------\n");
-      snprintf(msg, 75, "%s.%d", macchar, cc);
+      snprintf(msg, 75, "%s.%d.%d", macchar, cc, accumulate);
       //lastMsg = now; //think about reduce this losing risk;
       mclient.publish("dev", msg);
-      snprintf(msg, 75, "si=%d", cc);
-      display.print(msg);
+      snprintf(msg, 75, "si=%d,%d", cc, accumulate);
+      // display.print(msg);
       delay(2000);
       reset_signal();
     }
@@ -301,7 +302,7 @@ void loop() {
     mclient.publish("remote", msg);
     snprintf(msg, 75, "%d%d%d%d\n", signalvalue[0], signalvalue[1], signalvalue[2], signalvalue[3]);
     Serial.printf(msg);
-    display.print(msg);
+    // display.print(msg);
     
   }
 }

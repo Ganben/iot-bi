@@ -117,6 +117,10 @@ class Rdb:
     def add_act(self, lin):
         #
         #
+        if lin is None:
+            return
+        if not isinstance(lin, list):
+            return
         if self.actions.get(lin[0]) is None:
             self.actions[lin[0]] = [0,0,0,0]
             self.actions[lin[0]][lin[1]-1] = 1
@@ -212,14 +216,18 @@ class ProxyMsg(Proxy):
 def parseDev(str_content):
     #
     ss = str_content.split('.')
+    if isinstance(ss, list):
+        logger.debug("dev=%s" %(ss[0]))
     # reto = MsgDev(str_content)
-    return 
+    return ss
 
 def parseID(str_content):
     # parse the str to
     ss = str_content.split('.')
+    if isinstance(ss, list):
+        logger.debug("dev=%s" % ss[0])
     # reto = MsgRemote(str_content)
-    return
+    return ss
 
 def parseSigStatus(s):
     if len(s) != 4:
