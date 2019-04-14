@@ -1,4 +1,10 @@
 <template>
+<v-layout row_wrap>
+  <v-flex xs12>
+        <v-card dark color="primary">
+          <v-card-text class="px-0">12</v-card-text>
+        </v-card>
+      
   <div class="home">
       <v-layout justify-space-around>
     <v-icon large color="green darken-2">business</v-icon>
@@ -32,17 +38,22 @@
         shopping_cart
       </v-icon>
     </v-badge>
+    <Buttons msg="123"/>
   </div>
+  </v-flex>
+</v-layout>
 </template>
 
 <script>
 // @ is an alias to /src
 import HelloWorld from '@/components/HelloWorld.vue'
+import Buttons from '@/components/Buttons.vue'
 
 export default {
   name: 'home',
   components: {
-    HelloWorld
+    HelloWorld,
+    Buttons
   }
 }
 </script>

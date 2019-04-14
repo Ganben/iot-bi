@@ -1,4 +1,5 @@
-<template>
+<template> 
+<v-container grid-list-md text-xs-center>
   <div id="app">
     <div id="nav">
       <router-link to="/">Home</router-link> |
@@ -6,6 +7,7 @@
     </div>
     <router-view/>
   </div>
+</v-container>
 </template>
 
 <style>
