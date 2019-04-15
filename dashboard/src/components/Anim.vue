@@ -5,7 +5,8 @@
 </div>
 </template>
 <script>
-import Lottie from 'vue-lottie';
+import Lottie from './lottie.vue';
+// import Lottie from 'vue-lottie';
 import * as animationData from '@/assets/5212-loading.json';
 
 export default {
@@ -18,18 +19,50 @@ export default {
             defaultOptions: { 
                 animationData: animationData.default,
                 // renderer: 'html',
-                loop: false},
+                autoplay: false,
+                loop: 3},
         };
     },
     methods: {
         handleAnimation: function (anim) {
-            this.anim = anim;
-            this.anim.play();
-            // this.anim.stop();
+            this.ltanim = anim;
+            // this.ltanim.play();
+            // this.ltanim.stop();
+            // t = anim.getDuration(false);
+            // console.log('anim dur: ' + t);
         },
-        play: function () {
-            this.anim.play();
+        ssplay: function () {
+            console.log('ssplay');
+            this.ltanim.play();
+            // this.ltanim.playSegments(0,2,false);
+        },
+        ssstop: function () {
+            // wait(1500);
+            console.log('stop');
+            this.ltanim.stop();
+        },
+        sspause: function () {
+            console.log('pause');
+            this.ltanim.pause();
+        },
+        ssreload: function () {
+            console.log('anim reload');
+            this.ltanim.loadAnimation({
+                path: animationData.default,
+                loop: false,
+                autoplay: true
+            });
         }
     },
+    mounted() {
+        // this.ssstop();
+    },
+    mqtt: {
+        'VueMqtt/+' (data, topic) {
+            this.ssplay();
+            console.log('received:' + data);
+            // setTimeout(this.sspause(), 1500);
+        }
+    }
 }
 </script>
