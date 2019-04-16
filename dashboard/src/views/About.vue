@@ -1,15 +1,15 @@
 <template>
   <div class="about">
-    <h1>This is an about page</h1>
-    <Anim />
+    <h1>Login into Your Account</h1>
+    <LoginForm />
   </div>
 </template>
 <script>
-import Anim from '@/components/Anim.vue'
+import LoginForm from '@/components/LoginForm.vue'
 export default {
   name: 'about',
   components: {
-    Anim
+    LoginForm
   }
 }
 </script>

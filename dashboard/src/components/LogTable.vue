@@ -9,11 +9,14 @@
         width="180">
       </el-table-column>
       <el-table-column
-        prop="di"
+        prop="devicepin"
         label="Device"
-        width="180">
+        width="380">
       </el-table-column>
-
+      <el-table-column prop="counts"
+      label="Counts"
+      width="120">
+      </el-table-column>
     </el-table>
 </div>
 </template>
@@ -46,7 +49,7 @@ export default {
     }
   },
   mounted() {
-
+    getLogs();
   },
   mqtt: {
       'webdev/+' (data, topic) {

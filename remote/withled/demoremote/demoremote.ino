@@ -16,8 +16,11 @@
 
 #define RST_OLED 16
 
-const char* WIFISSID = "LY1688";
-const char* PASS = "admin85259297";
+//const char* WIFISSID = "LY1688";
+//const char* PASS = "admin85259297";
+const char* WIFISSID = "Roamingman_81786";
+const char* PASS = "04364786";
+
 const char* MQSERVER = "iot.aishe.org.cn";
 const int MQPORT = 1883;
 int status = WL_IDLE_STATUS ;

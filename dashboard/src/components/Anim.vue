@@ -19,7 +19,7 @@ export default {
             defaultOptions: { 
                 animationData: animationData.default,
                 // renderer: 'html',
-                autoplay: false,
+                autoplay: true,
                 loop: 3},
         };
     },
@@ -58,7 +58,7 @@ export default {
         // this.ssstop();
     },
     mqtt: {
-        'VueMqtt/+' (data, topic) {
+        'webdev/+' (data, topic) {
             this.ssplay();
             console.log('received:' + data);
             // setTimeout(this.sspause(), 1500);

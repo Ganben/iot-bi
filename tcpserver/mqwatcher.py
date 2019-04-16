@@ -104,10 +104,24 @@ class Rdb:
     
     def add_hb(self, lin):
         logger.debug('add hb:%s.%s.%s.%s' % (lin[0],lin[1],lin[2],lin[3]))
+        sts = parseSigStatus(lin[3])
+        if self.devices.get(lin[1]) is None:
+            rd.rpush('devindex', lin[1])
+
         self.devices[lin[1]] = {
             "time": 3*int(lin[2]),
-            "status": parseSigStatus(lin[3])
+            "status": sts
         }
+        # push statues to key, so that it can be retrieved later
+        cts = self.actions.get(lin[1])
+        if cts is None:
+            cts = [0,0,0,0]
+        csts = {
+            "status": sts,
+            "counts": cts
+        }
+        rd.set(lin[1], json.dumps(csts))
+
         # self.
         if datetime.datetime.today() - self.date >= datetime.timedelta(days=1):
             self.dayswap()
