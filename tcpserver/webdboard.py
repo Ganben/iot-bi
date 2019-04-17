@@ -7,6 +7,7 @@ from flask import session
 from flask import redirect
 from flask import url_for
 
+import redis
 import logging
 import datetime
 import json
@@ -46,6 +47,31 @@ CORS(app)
 def ping_pong():
     return jsonify('pong!')
 
+@app.route('/api/linchart', methods=['GET'])
+def linchart():
+    #
+    bars = []
+    xs = []
+    td = datetime.date.today() - datetime.timedelta(days=6)
+    for i in range(7):
+        d = td + datetime.timedelta(days=i)
+        xs.append(d.isoformat())
+    d = rd.llen('aclist')
+    
+    d = 0 if d is None else d
+    
+    bars = [120, 20, 45, 120, 50, 61, d]
+    ret = {
+        "xs": xs,
+        "serie": {
+            'name': 'Activities',
+            'type': 'bar',
+            'data': bars
+        }
+    }
+
+    return jsonify(ret)
+
 
 #
 @app.route('/api/status', methods=['GET'])
@@ -66,7 +92,7 @@ def all_status():
             sts = json.loads(stsr.decode('ascii'))
         
 
-        for i in range(4):
+        for i in range(2):
             if isinstance(sts['status'], list):
                 #
                 st = sts['status']
@@ -78,9 +104,9 @@ def all_status():
             else:
                 ct = [0,0,0,0]
             ret.append({
-                "id": "%s%s" % (k,i),
-                "st": "%d" % st[i],
-                "ct": "%d" % ct[i]
+                "id": "%s%s" % (k,i+3),
+                "st": st[i+2],
+                "ct": ct[i+2]
             })
     return jsonify(ret)
     
@@ -104,7 +130,8 @@ def all_logacts():
     for i in list(d):
         try:
             e = i.decode('ascii')
-            ret.append(e)
+            logger.debug('logacts: %s' % e)
+            ret.append(json.loads(e))
         except:
             logger.error('parse rd el error')
 
@@ -119,4 +146,4 @@ def all_logacts():
     # ])
 
 if __name__ == '__main__':
-    app.run(host='localhost', port=5000)
+    app.run(host='0.0.0.0', port=5000)

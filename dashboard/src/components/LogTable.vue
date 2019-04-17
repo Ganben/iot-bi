@@ -31,14 +31,14 @@ export default {
   data() {
       return {
         tableData:[
-            {"time":"11:10:11", "di": "12341234"},
-            {"time":"12:10:11", "di": "12341234"}
+            {"time":"11:10:11", "devicepin": "12341234", "counts": 2},
+            {"time":"12:10:11", "devicepin": "12341234", "counts": 1}
         ]
       };
   },
   methods: {
     getLogs() {
-        const path = 'http://aishe.org.cn/api/logacts';
+        const path = 'http://aishe.org.cn:5000/api/logacts';
         axios.get(path)
           .then((res) => {
               this.tableData = res.data;
@@ -49,11 +49,13 @@ export default {
     }
   },
   mounted() {
-    getLogs();
+    this.getLogs();
   },
   mqtt: {
-      'webdev/+' (data, topic) {
-
+      'webdev/log' (data, topic) {
+         console.log('rec:' + data);
+         this.tableData.unshift(JSON.parse(data));
+         console.log('len: '+ this.tableData);
       }
   }
 }

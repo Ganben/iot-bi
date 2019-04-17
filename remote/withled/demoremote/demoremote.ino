@@ -41,8 +41,8 @@ uint8_t macarry[6];// = "00000001"; //device id
 char macchar[12];
 //"8fad12f5d9";
 // for buttun/high-low voltage signal
-const int s1Pin = 1;
-const int s2Pin = 3;
+const int s1Pin = 14;
+const int s2Pin = 12;
 const int s3Pin = 13;
 const int s4Pin = 15;
 

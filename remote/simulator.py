@@ -29,6 +29,13 @@ c.on_message = on_message
 
 # c.loop_forever()
 
+def send_bh():
+    publish.single("remote", "hb.ecfabc9c3610.1.1100", hostname="aishe.org.cn", port=1883)
+
+def send_dv():
+    publish.single("dev", "ecfabc9c3610.4.110", hostname="aishe.org.cn", port=1883)
+
+
 if __name__ == "__main__":
     # read sys.argv[1]: id, [2] count
     if len(sys.argv) < 3:
@@ -38,6 +45,7 @@ if __name__ == "__main__":
     # real wlan addr: 192.168.31.122
     ho = sys.argv[2]
     # assert(ho, str)
-    pl = f"{int(sys.argv[1]):x}"
+    # pl = f"{int(sys.argv[1]):x}"
+    pl = "%s.%s" % (sys.argv[1], 4)
     publish.single("dev", pl, hostname=ho, port=9883, transport="websockets", retain=False, qos=2)
     print("--sent--")

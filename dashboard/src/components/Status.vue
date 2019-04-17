@@ -28,7 +28,7 @@ export default {
   },
   methods: {
     getStatus() {
-        const path = 'http://aishe.org.cn/api/status';
+        const path = 'http://aishe.org.cn:5000/api/status';
         axios.get(path)
           .then((res) => {
               this.items = res.data;
@@ -40,12 +40,23 @@ export default {
   },
   mounted() {
     this.getStatus();
+  },
+  mqtt: {
+    'webdev/on' (data, topic) {
+      console.log('receive:'+data)
+      for (var i =0; i < this.items.length; i++) {
+        if (this.items[i].id == data.devicepin) {
+          this.items[i].ct = data.counts;
+          break;
+        }
+      }
+    }
   }
 }
 </script>
 <style>
 .badgeitem {
     margin-top: 10px;
-    margin-right: 40px;
+    margin-right: 26px;
 }
 </style>

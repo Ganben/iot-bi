@@ -19,8 +19,8 @@ export default {
             defaultOptions: { 
                 animationData: animationData.default,
                 // renderer: 'html',
-                autoplay: true,
-                loop: 3},
+                autoplay: false,
+                loop: "2"},
         };
     },
     methods: {
@@ -58,10 +58,14 @@ export default {
         // this.ssstop();
     },
     mqtt: {
-        'webdev/+' (data, topic) {
+        'webdev/on' (data, topic) {
             this.ssplay();
             console.log('received:' + data);
             // setTimeout(this.sspause(), 1500);
+        },
+        'webdev/off' (data, topic) {
+            this.sspause();
+            console.log('receive stop:' + data);
         }
     }
 }

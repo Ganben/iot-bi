@@ -78,25 +78,46 @@ class Rdb:
             dsl = ds.split('-')
             logger.debug('load time:%s' % ds)
             self.date = datetime.datetime(int(dsl[0]), int(dsl[1]), int(dsl[2]))
+        
+        if self.rd.get('today-sum') is None:
+            self.rd.set('today-sum', 0)
+            self.sums = 0
+        else:
+            logger.debug('load sums %d' % int(self.rd.get('today-sum')))
+            self.sums = self.rd.get('today-sum')
         # if self.rd.llen('hblist') > 0:
         # TODO: add cached reload
-        while self.rd.llen('hblist') > 0:
-            pass
+        # while self.rd.llen('hblist') > 0:
+        #     pass
         
-        while self.rd.llen('aclist') > 0:
-            pass
+        # while self.rd.llen('aclist') > 0:
+        #     pass
+
+    def get_dvpin_count(self, dv, pin):
+        #
+        pin = int(pin)-1
+        logger.debug('webon:%s.%s' % (dv,pin))
+        if self.actions.get(dv) is not None:
+            logger.debug('%s' % self.actions.get(dv))
+            return self.actions.get(dv)[pin]
+        else:
+            logger.error('no match')
+            return 0
 
     
-    def put_heartbeat(self, hb):
-        # put heartbeat to rd
-        self.rd.rpush('hblist', hb)
+    # def put_heartbeat(self, hb):
+    #     # put heartbeat to rd
+    #     self.rd.rpush('hblist', hb)
 
-    def put_activity(self, action):
-        # put activity to
-        self.rd.rpush('aclist', action)
+    # def put_activity(self, action):
+    #     # put activity to
+    #     self.rd.rpush('aclist', action)
     
     def add_dev(self, lin):
         logger.warn('new dev:%s' % lin[0])
+        self.sums += 1
+        self.rd.set('today-sum', self.sums)
+
         self.devices[lin[0]] = {
             "time": 0,
             "status": [0,0,0,0]
@@ -136,25 +157,31 @@ class Rdb:
         if not isinstance(lin, list):
             return
         if self.actions.get(lin[0]) is None:
+            # lin[1] = lin[1]
             self.actions[lin[0]] = [0,0,0,0]
-            self.actions[lin[0]][lin[1]-1] = 1
+            self.actions[lin[0]][int(lin[1])-1] = 1
+            stats= [0,0,0,0]
+            stats[int(lin[1])-1] = 1
         else:
             stats = self.actions[lin[0]]
             # stats[0] = stats[0] + 1
-            stats[lin[1]-1] = stats[lin[1]-1] + 1
+            stats[int(lin[1])-1] = stats[int(lin[1])-1] + 1
         t = time.strftime('%H:%M:%S', time.localtime())
         action_item = json.dumps({
             "time": t,
             "devicepin": "%s%s" % (lin[0],lin[1]),
-            "counts": stats[lin[1]-1]
+            "counts": stats[int(lin[1])-1]
         })
-        self.rd.rpush('aclist', action_item)
+        logger.info('add action:%s' % action_item)
+        self.rd.lpush('aclist', action_item)
+        return action_item
 
     def dayswap(self):
         # swap cached msgs
         if self.rd.llen('hblist') > 0:
             o = self.rd.delete('hblist')
             # do something
+        self.rd.set('today-sums', 0)
 
         if self.rd.llen('aclist') > 0:
             o = self.rd.delete('aclist')
@@ -162,7 +189,12 @@ class Rdb:
         for key, _ in self.devices.items():
             # for i in range(4):
             self.rd.rpush('deviceslist', key)
-
+        
+        self.rd.delete('devindex')
+        d = datetime.datetime.now().date()
+        self.rd.set('date', d)
+        self.date = d
+        
         for key, value in self.actions.items():
             self.rd.rpush('actionlist', key)
             for i in range(len(value)):
@@ -262,6 +294,8 @@ def on_connect(client,userdata, flag_dict, rc):
     logger.info("connected with result: %s" % str(rc))
     client.subscribe("dev")
     client.subscribe("remote")
+    client.subscribe("webdev/on")
+    client.subscribe("webdev/off")
 
 def on_message(client, userdata, msg):
     # use proxy mode to call update
@@ -271,8 +305,13 @@ def on_message(client, userdata, msg):
     if msg.topic == 'dev':
 
         r = parseDev(msg.payload.decode('ascii'))
-        rdb.add_act(r)
-        
+        logmsg = rdb.add_act(r)
+        dvpin = "%s%s" % (r[0],r[1])
+        cts = rdb.get_dvpin_count(r[0], r[1])
+        pld = {"id":dvpin,"ct":cts}
+        client.publish('webdev/on', json.dumps(pld))
+        client.publish('webdev/log', logmsg)
+
     elif msg.topic == 'remote':
         r = parseID(msg.payload.decode('ascii'))
         try:
@@ -303,4 +342,5 @@ if __name__ == "__main__":
     # c.username_pw_set("guest", "guest")
     # c.ws_set_option(path="/")
     # c.connect("127.0.0.1", 1883, 60)
+    logger.debug('on')
     c.loop_forever()

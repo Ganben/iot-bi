@@ -14,10 +14,6 @@ import axios from 'axios'
 
 export default {
   name: 'lineChart',
-  props: {
-    chartOption: Object,
-    chartData: Object
-  },
   components: {
     'v-chart': ECharts
   },
@@ -32,23 +28,20 @@ export default {
                 data:['Total Activities']
             },
             xAxis: {
-                data: ["Mon","Tue","Wed","Thr","Fri","Sat"]
+                data: []
             },
             yAxis: {},
-            series: [{
-                name: 'Activites',
-                type: 'bar',
-                data: [566, 2210, 3561, 1421, 2020, 1992]
-            }]
+            series: []
       }
-    }
+    };
   },
   methods: {
     getChartData() {
-      const path='http://www.aish.org.cn:5000/api/linchart';
+      const path='http://www.aishe.org.cn:5000/api/linchart';
       axios.get(path)
         .then((res) => {
-          this.chartData = res.data;
+          this.lines.xAxis.data = res.data.xs;
+          this.lines.series.push(res.data.serie);
         })
         .catch();
     },
@@ -57,7 +50,19 @@ export default {
     }
   },
   created() {
-    // getChartData();
+    this.getChartData();
+  },
+  mqtt: {
+    'webdev/on' (data, topic) {
+      // console.log(data);
+      // this.lines.series[0].data[6] += 1;
+      var last = this.lines.series.pop();
+      // console.log(''+last);
+      var lasta = last.data.pop();
+      lasta ++;
+      last.data.push(lasta);
+      this.lines.series.push(last);
+    }
   }
 }
 </script>
