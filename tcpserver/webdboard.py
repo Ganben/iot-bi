@@ -6,6 +6,12 @@ from flask_cors import CORS
 from flask import session
 from flask import redirect
 from flask import url_for
+from flask import abort
+from flask import request
+# auth decorator support
+from functools import wraps
+import jwt
+# flask-principle is another choice
 
 import redis
 import logging
@@ -15,6 +21,7 @@ import os
 import time
 # configuration
 DEBUG = True
+
 
 # instantiate the app
 app = Flask(__name__, static_url_path='/static')
@@ -41,11 +48,34 @@ logger.addHandler(ch)
 # enable CORS
 CORS(app)
 
+def authorize(f):
+    @wraps(f)
+    def decorated_function(*args, **kws):
+        if not 'Authorization' in request.headers:
+            abort(401)
+        
+        user = None
+        data = request.headers['Authorization'].encode('ascii', 'ignore')
+        token = str.replace(str(data), 'Bearer ', '')
+        try:
+            user = jwt.decode(token, JWT_SECRET, algorithms=['HS256'])
+        except:
+            abort(401)
+        
+        return f(user, *args, **kws)
+    return decorated_function
+### use for:
+'''
+axios({ method: 'POST', url: 'you http api here', headers: {Authorization: localStorage.token}, data: { user: 'name' } })
+'''
+
 
 # sanity check route
-@app.route('/ping', methods=['GET'])
-def ping_pong():
-    return jsonify('pong!')
+@app.route('/ping', methods=['GET', 'POST'])
+@authorize
+def ping_pong(user):
+    data = json.loads(request.data)
+    return jsonify(user)
 
 @app.route('/api/linchart', methods=['GET'])
 def linchart():
