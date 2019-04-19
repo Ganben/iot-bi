@@ -145,5 +145,15 @@ def all_logacts():
     #     {"time":"11:10:11", "di": "12341234"}
     # ])
 
+@app.route('/api/login', methods=['POST'])
+def handle_login():
+    # parse incoming data
+    pass
+
+@app.route('/api/accinfo', methods=['GET'])
+@authenticate_require
+def account_info():
+    pass
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)

@@ -23,7 +23,7 @@ import router from './router'
 
 Vue.use(Vuex)
 // Vue.use(Vuetify)
-Vue.use(Vuex)
+// Vue.use(Vuex)
 // Vue.use(VueMqtt, 'ws://www.aishe.org.cn/ws', options)
 // Vue.use(VueMqtt, 'ws://iot.eclipse.org:80/ws', {clientId: 'WebClient-' + parseInt(Math.random() * 100000)})
 Vue.use(VueMqtt, 'ws://www.aishe.org.cn:9883', {clientId: 'WebClient-' + parseInt(Math.random() * 100000)})
