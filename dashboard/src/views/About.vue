@@ -5,11 +5,21 @@
   </div>
 </template>
 <script>
+import { magGetters, mapState, mapActions } from 'vuex'
 import LoginForm from '@/components/LoginForm.vue'
 export default {
   name: 'about',
   components: {
     LoginForm
+  },
+  methods: {
+     ...mapActions([
+       'addToken',
+       'login'
+     ]),
+     loginFunc() {
+       
+     }
   }
 }
 </script>
