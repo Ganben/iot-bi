@@ -30,7 +30,8 @@ const mutations = {
 // asynchronous operations.
 const actions = {
     increment: ( { commit }) => commit('increment'),
-    addToken: ( {commit}, jwtstr ) => commit('addToken', jwtstr)
+    addToken: ( {commit}, jwtstr ) => commit('addToken', jwtstr),
+    login: ({ commit }, user ) 
 }
 
 // getters are functions

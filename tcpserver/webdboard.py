@@ -11,6 +11,7 @@ from flask import request
 # auth decorator support
 from functools import wraps
 import jwt
+# pyjwt
 # flask-principle is another choice
 
 import redis
@@ -179,6 +180,25 @@ def all_logacts():
 def handle_login():
     # parse incoming data
     pass
+    # TODO process
+    # user name, , serial no, OTP
+    #
+    user_id = 'test'
+    if True:
+        try:
+            payload = {
+                'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=1),
+                'iat': datetime.datetime.utcnow(),
+                'sub': user_id
+            }
+            return jwt.encode(
+                payload,
+                app.config.get('SECRET_KEY'),
+                algorithm='HS256'
+            )
+        except Exception as e:
+            return e
+
 
 @app.route('/api/accinfo', methods=['GET'])
 @authenticate_require
