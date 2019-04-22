@@ -22,6 +22,9 @@
 </template>
 
 <script>
+import axios from 'axios'
+import passwordHash from 'password-hash'
+
   export default {
     name: 'LoginForm',
     data() {
@@ -38,10 +41,30 @@
     methods: {
       submitForm(formName) {
         alert('Coming Soon!');
+        ldata = {
+            username: ruleForm2.username,
+            password: passwordHash.generate(ruleForm2.pass)
+        };
+        //axios use json as  default post 
+        axios.post('http://aishe.org.cn:5000/api/login', ldata)
+        .then(function (response) {
+          this.saveToken(response);
+          console.log(''+response);
+        })
+        .catch(function (error){
+          console.log(error);
+        })
+      },
+      saveToken(token) {
+          this.addToken(token);
       },
       resetForm(formName) {
         // this.$refs[formName].resetFields();
-      }
+      },
+      ...mapActions([
+       'addToken',
+       'login'
+     ])
     }
   }
 </script>

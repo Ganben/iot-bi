@@ -59,7 +59,7 @@ def authorize(f):
         data = request.headers['Authorization'].encode('ascii', 'ignore')
         token = str.replace(str(data), 'Bearer ', '')
         try:
-            user = jwt.decode(token, JWT_SECRET, algorithms=['HS256'])
+            user = jwt.decode(token, app.config.get("SECRET_KEY"), algorithms=['HS256'])
         except:
             abort(401)
         
@@ -106,6 +106,7 @@ def linchart():
 
 #
 @app.route('/api/status', methods=['GET'])
+@authorize
 def all_status():
     #
     d = rd.lrange('devindex', 0, 100)
@@ -176,6 +177,9 @@ def all_logacts():
     #     {"time":"11:10:11", "di": "12341234"}
     # ])
 
+def validate_login(post_dict):
+    return True
+
 @app.route('/api/login', methods=['POST'])
 def handle_login():
     # parse incoming data
@@ -183,7 +187,15 @@ def handle_login():
     # TODO process
     # user name, , serial no, OTP
     #
-    user_id = 'test'
+    post_json = request.json
+    if validate_login(post_json):
+
+        # 
+        #TODO retrieve user
+        user_id = 'test'    
+    else:
+        abort(401)
+    
     if True:
         try:
             payload = {
@@ -201,7 +213,7 @@ def handle_login():
 
 
 @app.route('/api/accinfo', methods=['GET'])
-@authenticate_require
+@authorize
 def account_info():
     pass
 
