@@ -5,8 +5,9 @@
   </div>
 </template>
 <script>
-import { magGetters, mapState, mapActions } from 'vuex'
+// import { mapState } from 'vuex'
 import LoginForm from '@/components/LoginForm.vue'
+
 export default {
   name: 'about',
   components: {

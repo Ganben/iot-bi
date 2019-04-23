@@ -23,6 +23,10 @@ const mutations = {
     },
     addToken (state, jwtstr) {
         state.token = jwtstr
+    },
+    loginUser (state, user) {
+        state.login = true;
+        state.roles.push(user);
     }
 }
 
@@ -31,12 +35,14 @@ const mutations = {
 const actions = {
     increment: ( { commit }) => commit('increment'),
     addToken: ( {commit}, jwtstr ) => commit('addToken', jwtstr),
-    login: ({ commit }, user ) 
+    login: ({ commit }, user ) => commit('loginUser', user)
 }
 
 // getters are functions
 const getters = {
-    evenOrOdd: state => state.count % 2 === 0 ? 'even' : 'odd'
+    evenOrOdd: state => state.count % 2 === 0 ? 'even' : 'odd',
+    loginstatus: state => state.token === '' ? true : false,
+    logintoken: state => state.token,
 }
 
 // A Vuex instance is created by combining the state, mutations, actions,

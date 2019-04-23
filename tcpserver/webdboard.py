@@ -187,7 +187,9 @@ def handle_login():
     # TODO process
     # user name, , serial no, OTP
     #
-    post_json = request.json
+    logger.debug('post:%s' % request.get_json())
+    post_json = request.get_json()
+
     if validate_login(post_json):
 
         # 

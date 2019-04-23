@@ -15,6 +15,7 @@ import VueMqtt from 'vue-mqtt'
 // import { Ripple } from 'vuetify/lib/directives'
 import App from './App.vue'
 import router from './router'
+import store from './store'
 
 // options = {
 //   username: 'guest',
@@ -34,5 +35,6 @@ Vue.config.productionTip = false
 
 new Vue({
   router,
+  store,
   render: h => h(App)
 }).$mount('#app')
