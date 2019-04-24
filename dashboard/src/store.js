@@ -22,7 +22,8 @@ const mutations = {
         state.cout++
     },
     addToken (state, jwtstr) {
-        state.token = jwtstr
+        state.token = jwtstr;
+        localStorage.token = jwtstr;
     },
     loginUser (state, user) {
         state.login = true;

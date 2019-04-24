@@ -22,6 +22,9 @@ import { mapGetters } from 'vuex'
 import axios from 'axios'
 // import Anim from '@/components/Anim.vue'
 // import Vuetify from 'vuetify'
+// login reload can use $forceUpdate
+// use conditional render in the first place to refractor vue archi
+// end of this version due to explorer and re config( need auth configed axios file )
 
 export default {
   name: 'home',
@@ -36,6 +39,11 @@ export default {
     'logintoken'
   ]),
   mounted() {
+    if (localStorage.token) {
+      axios.defaults.headers.common['Authorization'] = "Bearer "+this.logintoken;
+      console.log('axios header set with' + this.logintoken);
+      console.log('ls:'+ localStorage.token);
+    }
     this.$mqtt.subscribe('webdev/#', {callback: console.log('mqtt con')});
     if (this.loginstatus) {
       axios.defaults.headers.common['Authorization'] = "Bearer "+this.logintoken;
