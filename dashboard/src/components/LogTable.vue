@@ -21,7 +21,9 @@
 </div>
 </template>
 <script>
+import { mapGetters } from 'vuex'
 import axios from 'axios'
+// import  myApi  from '@/axios.js'
 
 export default {
   name: 'LogTable',
@@ -38,22 +40,27 @@ export default {
   },
   methods: {
     getLogs() {
-        const path = 'http://aishe.org.cn:5000/api/logacts';
-        axios.get(path)
+        const path = 'http://aishe.org.cn/api/logacts';
+        const conf = this.axiosconfig();
+        axios.get(path, conf)
           .then((res) => {
               this.tableData = res.data;
           })
           .catch((error) => {
               console.error('renew data error');
+              console.error('' + error);
           });
-    }
+    },
+    ...mapGetters([
+      'axiosconfig'
+    ])
   },
   mounted() {
     this.getLogs();
   },
   mqtt: {
       'webdev/log' (data, topic) {
-         console.log('rec:' + data);
+         console.log('rec:' + topic +':' + data);
          this.tableData.unshift(JSON.parse(data));
          console.log('len: '+ this.tableData);
       }

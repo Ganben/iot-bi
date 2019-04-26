@@ -1,5 +1,6 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
+import axios from 'axios'
 
 Vue.use(Vuex)
 
@@ -23,7 +24,7 @@ const mutations = {
     },
     addToken (state, jwtstr) {
         state.token = jwtstr;
-        localStorage.token = jwtstr;
+        localStorage.setItem('token', jwtstr);
     },
     loginUser (state, user) {
         state.login = true;
@@ -36,14 +37,58 @@ const mutations = {
 const actions = {
     increment: ( { commit }) => commit('increment'),
     addToken: ( {commit}, jwtstr ) => commit('addToken', jwtstr),
-    login: ({ commit }, user ) => commit('loginUser', user)
+    login: ({ commit }, user ) => commit('loginUser', user),
+    authGet (path) {
+        const http = axios.create({
+            baseURL: 'https://aishe.org.cn/api/',
+            timeout: 1000,
+            headers: {'Content-Type': 'application/json',
+                    'Authorization': 'Basic ' + btoa('guest' + ':' + 'guest')
+        }
+          });
+        return http.get(path);
+    }
 }
 
 // getters are functions
 const getters = {
     evenOrOdd: state => state.count % 2 === 0 ? 'even' : 'odd',
     loginstatus: state => state.token === '' ? true : false,
-    logintoken: state => state.token,
+    logintoken (state) {
+        if (state.token != '') {
+            return state.token;
+        } else if ( localStorage.getItem('token')) {
+            return localStorage.getItem('token');
+        } else {
+            return
+        }
+    },
+    axiosconfig (state) {
+        var config = {
+            baseURL: 'http://aishe.org.cn/api/',
+            timeout: 1000,
+            headers: {'Content-Type': 'application/json',
+                    'Authorization': 'Basic ' + btoa('guest' + ':' + 'guest')
+            }
+        }
+        if (state.token != '') {
+            config.headers.Authorization = 'Bearer' + state.token;
+        } else if ( localStorage.getItem('token')) {
+            config.headers.Authorization = 'Bearer ' + localStorage.getItem('token');
+        }
+        return config;
+    },
+    axconfs (state) {
+        var cf;
+        if (state.token != '') {
+            cf = 'Bearer' + state.token;
+        } else if ( localStorage.getItem('token')) {
+            cf = 'Bearer ' + localStorage.getItem('token');
+        } else {
+            cf = 'Basic ' + btoa('guest' + ':' + 'guest'); 
+        }
+        return cf;
+    }
 }
 
 // A Vuex instance is created by combining the state, mutations, actions,

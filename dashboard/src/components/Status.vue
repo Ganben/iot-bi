@@ -1,6 +1,7 @@
 <template>
 <el-col>
-    <el-badge :value="item.ct" class="badgeitem" type="primary" v-for="item in items">
+     <span v-for="item in items" :key="item">
+     <el-badge :value="item.ct" class="badgeitem" type="primary">
         <!-- <el-col> -->
         <span>
         <el-button v-if="item.st" size="small" class="el-icon-circle-check"> {{item.id}}</el-button>
@@ -8,10 +9,14 @@
         </span>
         <!-- </el-col> -->
     </el-badge>
+     </span>
 </el-col>
 </template>
 <script>
+import { mapActions, mapGetters } from 'vuex';
 import axios from 'axios'
+// import http from '@/axios.js'
+
 
 export default {
   name: 'status',
@@ -28,29 +33,37 @@ export default {
   },
   methods: {
     getStatus() {
-        const path = 'http://aishe.org.cn:5000/api/status';
-        axios.get(path)
+        const path = 'http://aishe.org.cn/api/status';
+        const tk = this.axiosconfig();
+        axios.get(path, tk)
           .then((res) => {
               this.items = res.data;
           })
           .catch((error) => {
-              console.error('renew data error');
+              console.error('renew data error' + error);
           });
-    }
+    },
+    ...mapActions([
+      'authGet'
+    ]),
+    ...mapGetters([
+      'axiosconfig',
+      'axconfs'
+    ])
   },
   mounted() {
     this.getStatus();
   },
   mqtt: {
-    'webdev/on' (data, topic) {
-      console.log('receive:'+data)
-      for (var i =0; i < this.items.length; i++) {
-        if (this.items[i].id == data.devicepin) {
-          this.items[i].ct = data.counts;
-          break;
-        }
-      }
-    }
+    // 'webdev/on' (data, topic) {
+    //   console.log('receive:'+ topic + ':' + data)
+    //   for (var i =0; i < this.items.length; i++) {
+    //     if (this.items[i].id == data.devicepin) {
+    //       this.items[i].ct = data.counts;
+    //       break;
+    //     }
+    //   }
+    // }
   }
 }
 </script>

@@ -20,6 +20,7 @@ import datetime
 import json
 import os
 import time
+import base64
 # configuration
 DEBUG = True
 
@@ -49,6 +50,54 @@ logger.addHandler(ch)
 # enable CORS
 CORS(app)
 
+def verify_hd(jwttk):
+    # verify a jwt token
+    user = None
+    data = jwttk.decode('ascii', 'ignore')
+    # token = str.replace(str(data), 'Bearer ', '')
+    token = jwttk.decode('ascii')
+    logger.debug('%s' % jwttk.decode('ascii'))
+    try:
+        user = jwt.decode(token, app.config.get("SECRET_KEY"), algorithms=['HS256'])
+    except Exception as e:
+        logger.debug('jwt decode error %s' % e)
+        return True
+    return user
+
+def basicauth(f):
+    @wraps(f)
+    def decorated_function(*args, **kws):
+        if not 'Authorization' in request.headers:
+            abort(401)
+        hd = request.headers.get('Authorization').encode('ascii', 'ignore')
+        try:
+            logger.debug('basic: %s' %  hd)
+        except:
+            pass
+        # accept token auth
+        #
+                 
+        if hd == b'Basic Z3Vlc3Q6Z3Vlc3Q=':
+            logger.debug('basic auth equals')
+            user = 'guest'
+            return f(user, *args, **kws)
+        elif str(hd).startswith('Bearer ') and verify_hd(hd[7::]):
+            user = 'guest'
+            return f(user, *args, **kws)
+        else:
+            abort(401)
+    return decorated_function
+
+
+def sessionauth(f):
+    @wraps(f)
+    def decorated_function(*args, **kws):
+        if 'username' not in session:
+            logger.debug('session denied')
+            abort(401)
+        return f(session['username'], *args, **kws)
+    return decorated_function
+
 def authorize(f):
     @wraps(f)
     def decorated_function(*args, **kws):
@@ -73,7 +122,7 @@ axios({ method: 'POST', url: 'you http api here', headers: {Authorization: local
 
 # sanity check route
 @app.route('/ping', methods=['GET', 'POST'])
-@authorize
+@sessionauth
 def ping_pong(user):
     data = json.loads(request.data)
     return jsonify(user)
@@ -106,8 +155,8 @@ def linchart():
 
 #
 @app.route('/api/status', methods=['GET'])
-@authorize
-def all_status():
+@basicauth
+def all_status(user):
     #
     d = rd.lrange('devindex', 0, 100)
     keys = []
@@ -155,7 +204,8 @@ def all_status():
     # ])
 
 @app.route('/api/logacts')
-def all_logacts():
+@basicauth
+def all_logacts(user):
     #
     ret = []
     d = rd.lrange('aclist',0,100)
@@ -216,7 +266,7 @@ def handle_login():
 
 @app.route('/api/accinfo', methods=['GET'])
 @authorize
-def account_info():
+def account_info(user):
     pass
 
 if __name__ == '__main__':
