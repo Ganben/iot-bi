@@ -15,7 +15,7 @@
     "echarts": "^4.2.1",
     "element-ui": "^2.7.2",
     "less": "^3.9.0",
-    "node-sass": "^4.11.0",
+    "node-sass": "^4.13.1",
     "password-hash": "^1.2.2",
     "sass-loader": "^7.1.0",
     "vue": "^2.6.6",
